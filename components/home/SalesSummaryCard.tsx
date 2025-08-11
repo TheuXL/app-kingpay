@@ -1,27 +1,57 @@
-import { Dimensions, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, StyleSheet, Text, View, ActivityIndicator } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
+import { WalletData, FinancialData } from '../../services/api';
 
-export default function SalesSummaryCard() {
+interface SalesSummaryCardProps {
+  walletData: WalletData | null;
+  financialData: FinancialData | null;
+  loading: boolean;
+}
+
+// Função para formatar valores monetários
+const formatCurrency = (value: number): string => {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(value / 100); // Assumindo que os valores vêm em centavos
+};
+
+export default function SalesSummaryCard({ walletData, financialData, loading }: SalesSummaryCardProps) {
+  // Calcular valores baseados nos dados reais
+  const totalSales = walletData ? walletData.total : 0;
+  const pendingAmount = walletData ? walletData.a_receber : 0;
+  const availableBalance = walletData ? walletData.balance : 0;
+  
+  // Dados para o gráfico (por enquanto usando dados simulados baseados nos valores reais)
+  const chartData = {
+    labels: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'],
+    datasets: [
+      {
+        data: [
+          totalSales * 0.2,
+          totalSales * 0.3,
+          totalSales * 0.25,
+          totalSales * 0.25,
+        ],
+      },
+    ],
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color="#2A2AFF" />
+        <Text style={styles.loadingText}>Carregando dados de vendas...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      <Text style={styles.totalSales}>R$ 138.241,15</Text>
+      <Text style={styles.totalSales}>{formatCurrency(totalSales)}</Text>
       <Text style={styles.salesPeriod}>Últimos 30 dias</Text>
       <LineChart
-        data={{
-          labels: ['27 de Jun/25', '27 de Jul/25'],
-          datasets: [
-            {
-              data: [
-                Math.random() * 10000,
-                Math.random() * 10000,
-                Math.random() * 10000,
-                Math.random() * 10000,
-                Math.random() * 10000,
-                Math.random() * 10000,
-              ],
-            },
-          ],
-        }}
+        data={chartData}
         width={Dimensions.get('window').width - 40}
         height={220}
         chartConfig={{
@@ -50,17 +80,17 @@ export default function SalesSummaryCard() {
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: '#2A2AFF' }]} />
           <Text>Vendas</Text>
-          <Text style={styles.legendValue}>R$ 7.724,23</Text>
+          <Text style={styles.legendValue}>{formatCurrency(availableBalance)}</Text>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: '#FFA500' }]} />
           <Text>Pendente</Text>
-          <Text style={styles.legendValue}>R$ 2.822,91</Text>
+          <Text style={styles.legendValue}>{formatCurrency(pendingAmount)}</Text>
         </View>
         <View style={styles.legendItem}>
           <View style={[styles.legendDot, { backgroundColor: '#FF0000' }]} />
           <Text>Estorno</Text>
-          <Text style={styles.legendValue}>R$ 609,87</Text>
+          <Text style={styles.legendValue}>R$ 0,00</Text>
         </View>
       </View>
     </View>
@@ -100,5 +130,15 @@ const styles = StyleSheet.create({
   legendValue: {
     marginLeft: 'auto',
     fontWeight: 'bold',
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: 200,
+  },
+  loadingText: {
+    marginTop: 10,
+    color: '#666',
+    fontSize: 16,
   },
 });

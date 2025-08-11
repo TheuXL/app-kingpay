@@ -9,13 +9,16 @@ import RefundsCard from '../../components/home/RefundsCard';
 import SalesMetricsCard from '../../components/home/SalesMetricsCard';
 import SalesSummaryCard from '../../components/home/SalesSummaryCard';
 import FloatingMenu from '../../components/ui/FloatingMenu';
+import { useHomeData } from '../../hooks/useHomeData';
 
 export default function HomeScreen() {
+  const { walletData, financialData, extractData, loading, error } = useHomeData();
+
   return (
     <View style={styles.container}>
       <ScrollView>
         <HomeHeader />
-        <BalanceCard />
+        <BalanceCard walletData={walletData} loading={loading} />
         <QuickActions />
         <KingPayJourneyCard />
       <View style={styles.salesSummaryHeader}>
@@ -25,9 +28,17 @@ export default function HomeScreen() {
           <Ionicons name="chevron-down" size={24} color="black" />
         </View>
       </View>
-      <SalesSummaryCard />
-      <RefundsCard />
-      <SalesMetricsCard />
+      <SalesSummaryCard 
+        walletData={walletData} 
+        financialData={financialData} 
+        loading={loading} 
+      />
+      <RefundsCard financialData={financialData} loading={loading} />
+      <SalesMetricsCard 
+        walletData={walletData} 
+        financialData={financialData} 
+        loading={loading} 
+      />
       <ExploreCard />
       </ScrollView>
       <FloatingMenu />

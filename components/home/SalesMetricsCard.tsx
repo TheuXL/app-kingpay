@@ -1,7 +1,37 @@
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, ActivityIndicator } from 'react-native';
+import { WalletData, FinancialData } from '../../services/api';
 
-export default function SalesMetricsCard() {
+interface SalesMetricsCardProps {
+  walletData: WalletData | null;
+  financialData: FinancialData | null;
+  loading: boolean;
+}
+
+// Função para formatar valores monetários
+const formatCurrency = (value: number): string => {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(value / 100); // Assumindo que os valores vêm em centavos
+};
+
+export default function SalesMetricsCard({ walletData, financialData, loading }: SalesMetricsCardProps) {
+  // Calcular métricas baseadas nos dados reais
+  const reservaFinanceira = walletData ? walletData.reserva_financeira : 0;
+  const balanceCard = walletData ? walletData.balance_card : 0;
+  
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>Métricas de vendas</Text>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#2A2AFF" />
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Métricas de vendas</Text>
@@ -9,26 +39,28 @@ export default function SalesMetricsCard() {
         <View style={styles.card}>
           <View style={styles.cardTextContainer}>
             <View style={styles.cardTitleContainer}>
-              <Feather name="refresh-ccw" size={16} color="#666" />
-              <Text style={styles.cardTitle}>Chargeback</Text>
+              <Feather name="shield" size={16} color="#666" />
+              <Text style={styles.cardTitle}>Reserva</Text>
             </View>
-            <Text style={styles.cardValue}>R$ 4.689,36</Text>
+            <Text style={styles.cardValue}>{formatCurrency(reservaFinanceira)}</Text>
             <View style={styles.percentageContainer}>
-              <Feather name="arrow-up" size={14} color="black" />
-              <Text style={styles.cardPercentageGood}>+7,8%</Text>
+              <Feather name="info" size={14} color="#666" />
+              <Text style={styles.cardPercentageNeutral}>Financeira</Text>
             </View>
           </View>
         </View>
         <View style={styles.card}>
           <View style={styles.cardTextContainer}>
             <View style={styles.cardTitleContainer}>
-              <MaterialCommunityIcons name="qrcode" size={16} color="#666" />
-              <Text style={styles.cardTitle}>Vendas PIX</Text>
+              <MaterialCommunityIcons name="credit-card" size={16} color="#666" />
+              <Text style={styles.cardTitle}>Cartão</Text>
             </View>
-            <Text style={styles.cardValue}>R$ 64.689,36</Text>
+            <Text style={styles.cardValue}>{formatCurrency(Math.abs(balanceCard))}</Text>
             <View style={styles.percentageContainer}>
-              <Feather name="arrow-up" size={14} color="black" />
-              <Text style={styles.cardPercentageGood}>+15%</Text>
+              <Feather name={balanceCard >= 0 ? "arrow-up" : "arrow-down"} size={14} color={balanceCard >= 0 ? "green" : "red"} />
+              <Text style={balanceCard >= 0 ? styles.cardPercentageGood : styles.cardPercentageBad}>
+                {balanceCard >= 0 ? 'Positivo' : 'Negativo'}
+              </Text>
             </View>
           </View>
         </View>
@@ -84,5 +116,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: 'green',
     marginLeft: 5,
+  },
+  cardPercentageBad: {
+    fontSize: 14,
+    color: 'red',
+    marginLeft: 5,
+  },
+  cardPercentageNeutral: {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 5,
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 100,
   },
 });

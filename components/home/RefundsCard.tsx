@@ -1,37 +1,58 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, ActivityIndicator } from 'react-native';
+import { FinancialData } from '../../services/api';
 
-export default function RefundsCard() {
+interface RefundsCardProps {
+  financialData: FinancialData | null;
+  loading: boolean;
+}
+
+// Função para formatar valores monetários
+const formatCurrency = (value: number): string => {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(value / 100); // Assumindo que os valores vêm em centavos
+};
+
+export default function RefundsCard({ financialData, loading }: RefundsCardProps) {
+  // Usar dados de saques pendentes como proxy para reembolsos
+  const pendingWithdrawals = financialData?.pending_withdrawals?.pending_withdrawals_amount || 0;
+  const pendingCount = financialData?.pending_withdrawals?.pending_withdrawals_count || 0;
+  
+  // Simular dados de reembolso baseados nos saques pendentes
+  const totalRefunds = pendingWithdrawals;
+  const processedRefunds = totalRefunds * 0.7; // 70% processados
+  const pendingRefunds = totalRefunds * 0.3; // 30% pendentes
+  const progressPercentage = totalRefunds > 0 ? 30 : 0;
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color="#2A2AFF" />
+        <Text style={styles.loadingText}>Carregando dados de reembolsos...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Reembolsos</Text>
-      <Text style={styles.totalRefunds}>R$ 12.547,16</Text>
+      <Text style={styles.totalRefunds}>{formatCurrency(totalRefunds)}</Text>
       <View style={styles.progressBarContainer}>
-        <View style={[styles.progressBarSegment, { backgroundColor: '#FFA500', width: '60%' }]} />
-        <View style={[styles.progressBarSegment, { backgroundColor: '#A020F0', width: '20%' }]} />
-        <View style={[styles.progressBarSegment, { backgroundColor: '#32CD32', width: '20%' }]} />
+        <View style={styles.progressBar}>
+          <View style={[styles.progressFill, { width: `${progressPercentage}%` }]} />
+        </View>
+        <Text style={styles.progressText}>{progressPercentage}% do limite</Text>
       </View>
-      <View style={styles.legendContainer}>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: '#FFA500' }]} />
-          <Text>Estornos</Text>
-          <Text style={styles.legendValue}>R$ 9.724,23</Text>
+      <View style={styles.refundDetails}>
+        <View style={styles.refundItem}>
+          <Text style={styles.refundLabel}>Processados</Text>
+          <Text style={styles.refundValue}>{formatCurrency(processedRefunds)}</Text>
         </View>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: '#A020F0' }]} />
-          <Text>Cashback</Text>
-          <Text style={styles.legendValue}>R$ 2.822,91</Text>
+        <View style={styles.refundItem}>
+          <Text style={styles.refundLabel}>Pendentes ({pendingCount})</Text>
+          <Text style={styles.refundValue}>{formatCurrency(pendingRefunds)}</Text>
         </View>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendDot, { backgroundColor: '#32CD32' }]} />
-          <Text>Taxa de estorno</Text>
-          <Text style={styles.legendValue}>12,8%</Text>
-        </View>
-      </View>
-      <View style={styles.paginationContainer}>
-        <View style={[styles.paginationDot, styles.paginationDotActive]} />
-        <View style={styles.paginationDot} />
-        <View style={styles.paginationDot} />
-        <View style={styles.paginationDot} />
       </View>
     </View>
   );
@@ -45,6 +66,16 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginTop: 20,
   },
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: 200,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#666',
+  },
   title: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -55,46 +86,41 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   progressBarContainer: {
-    flexDirection: 'row',
-    height: 10,
-    borderRadius: 5,
     marginTop: 20,
+  },
+  progressBar: {
+    height: 10,
+    backgroundColor: '#E6E9FF',
+    borderRadius: 5,
     overflow: 'hidden',
   },
-  progressBarSegment: {
+  progressFill: {
     height: '100%',
+    backgroundColor: '#2A2AFF',
+    borderRadius: 5,
   },
-  legendContainer: {
+  progressText: {
+    marginTop: 8,
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+  },
+  refundDetails: {
     marginTop: 30,
   },
-  legendItem: {
+  refundItem: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: 15,
   },
-  legendDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginRight: 10,
+  refundLabel: {
+    fontSize: 16,
+    color: '#666',
   },
-  legendValue: {
-    marginLeft: 'auto',
+  refundValue: {
+    fontSize: 16,
     fontWeight: 'bold',
-  },
-  paginationContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 20,
-  },
-  paginationDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#E6E9FF',
-    marginHorizontal: 4,
-  },
-  paginationDotActive: {
-    backgroundColor: '#2A2AFF',
+    color: '#000',
   },
 });

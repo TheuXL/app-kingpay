@@ -1,7 +1,23 @@
 import { Feather, Ionicons } from '@expo/vector-icons';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native';
+import { WalletData } from '../../services/api';
 
-export default function BalanceCard() {
+interface BalanceCardProps {
+  walletData: WalletData | null;
+  loading: boolean;
+}
+
+// Função para formatar valores monetários
+const formatCurrency = (value: number): string => {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(value / 100); // Assumindo que os valores vêm em centavos
+};
+
+export default function BalanceCard({ walletData, loading }: BalanceCardProps) {
+  const displayBalance = walletData ? formatCurrency(walletData.balance) : 'R$ 0,00';
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -10,7 +26,13 @@ export default function BalanceCard() {
           <Feather name="more-horizontal" size={24} color="white" />
         </TouchableOpacity>
       </View>
-      <Text style={styles.balanceText}>R$ 138.241,45</Text>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="white" />
+        </View>
+      ) : (
+        <Text style={styles.balanceText}>{displayBalance}</Text>
+      )}
       <TouchableOpacity style={styles.withdrawButton}>
         <Text style={styles.withdrawButtonText}>Antecipar Saque</Text>
         <Ionicons name="arrow-forward" size={24} color="white" />
@@ -52,5 +74,12 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     marginRight: 10,
+  },
+  loadingContainer: {
+    height: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 50,
   },
 });
