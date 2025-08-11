@@ -2,6 +2,7 @@
   "expo": {
     "name": "kingpay",
     "slug": "kingpay",
+    "owner": "theuxdev",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -42,7 +43,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "be779095-4958-4db7-98fd-aa80ecf78488"
+        "projectId": "a791874d-ca50-454d-b172-e39ab9cb8534"
       }
     }
   }

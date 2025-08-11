@@ -2,14 +2,27 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import AccountSwitcher from './AccountSwitcher';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function HomeHeader() {
   const [modalVisible, setModalVisible] = useState(false);
+  const { user } = useAuth();
+
+  // Extrair o primeiro nome do email ou usar fullname se disponível
+  const getUserName = () => {
+    if (user?.user_metadata?.fullname) {
+      return user.user_metadata.fullname.split(' ')[0];
+    }
+    if (user?.email) {
+      return user.email.split('@')[0];
+    }
+    return 'Usuário';
+  };
 
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.userButton} onPress={() => setModalVisible(true)}>
-        <Text style={styles.userName}>Olá, Gabriel!</Text>
+        <Text style={styles.userName}>Olá, {getUserName()}!</Text>
         <Ionicons name="chevron-forward" size={24} color="#2A2AFF" />
       </TouchableOpacity>
       <View style={styles.iconsContainer}>

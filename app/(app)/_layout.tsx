@@ -1,6 +1,31 @@
-import { Stack } from 'expo-router';
+import { Stack, useRouter } from 'expo-router';
+import { useEffect } from 'react';
+import { ActivityIndicator, View } from 'react-native';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function AppLayout() {
+  const { session, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && !session) {
+      // Usuário não autenticado, redirecionar para login
+      router.replace('/');
+    }
+  }, [session, loading, router]);
+
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="#2A2AFF" />
+      </View>
+    );
+  }
+
+  if (!session) {
+    return null; // Será redirecionado pelo useEffect
+  }
+
   return (
     <Stack>
       <Stack.Screen name="home" options={{ headerShown: false }} />
