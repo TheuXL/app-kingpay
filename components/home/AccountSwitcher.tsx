@@ -1,18 +1,36 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function AccountSwitcher({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  const { user, signOut } = useAuth();
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Confirmar logout',
+      'Tem certeza que deseja sair da sua conta?',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Sair',
+          style: 'destructive',
+          onPress: async () => {
+            await signOut();
+            onClose();
+          },
+        },
+      ]
+    );
+  };
+
   const currentAccount = {
-    name: 'Gabriel Souza',
+    name: user?.user_metadata?.fullname || user?.email?.split('@')[0] || 'Usuário',
     type: 'Conta empresarial',
     avatar: require('@/assets/images/logo.png'),
   };
-
-  const otherAccounts = [
-    { name: 'Smart Tech', type: 'Conta empresarial' },
-    { name: 'Sommar Tech', type: 'Conta empresarial' },
-    { name: 'MultiHills', type: 'Conta empresarial' },
-  ];
 
   return (
     <Modal animationType="slide" transparent={true} visible={visible} onRequestClose={onClose}>
@@ -31,17 +49,10 @@ export default function AccountSwitcher({ visible, onClose }: { visible: boolean
             <Ionicons name="chevron-forward" size={24} color="white" />
           </TouchableOpacity>
 
-          <Text style={styles.title}>Outras contas</Text>
-          {otherAccounts.map((account, index) => (
-            <TouchableOpacity key={index} style={styles.otherAccount}>
-              <View style={styles.otherAvatar} />
-              <View>
-                <Text style={styles.otherAccountName}>{account.name}</Text>
-                <Text style={styles.otherAccountType}>{account.type}</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={24} color="blue" />
-            </TouchableOpacity>
-          ))}
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Ionicons name="log-out-outline" size={24} color="#FF3333" />
+            <Text style={styles.logoutText}>Sair da conta</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </Modal>
@@ -126,5 +137,22 @@ const styles = StyleSheet.create({
   otherAccountType: {
     fontSize: 14,
     color: 'gray',
+  },
+  logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    width: '100%',
+    justifyContent: 'flex-start',
+    marginTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+  },
+  logoutText: {
+    fontSize: 16,
+    color: '#FF3333',
+    marginLeft: 10,
+    fontWeight: '500',
   },
 });

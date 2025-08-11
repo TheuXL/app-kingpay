@@ -2,18 +2,50 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
+  Alert,
   Image,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
+  ActivityIndicator,
 } from 'react-native';
 import Checkbox from '../../components/Checkbox';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function LoginScreen() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { signIn } = useAuth();
+
+  const handleLogin = async () => {
+    if (!email.trim() || !password.trim()) {
+      Alert.alert('Erro', 'Por favor, preencha todos os campos');
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      const { error } = await signIn(email.trim(), password);
+      
+      if (error) {
+        Alert.alert('Erro no Login', error);
+      } else {
+        // O redirecionamento será tratado pelo sistema de navegação
+        router.push('/home' as any);
+      }
+    } catch (error) {
+      Alert.alert('Erro', 'Erro inesperado durante o login');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -33,16 +65,22 @@ export default function LoginScreen() {
           placeholder="joaodasilva@gmail.com"
           keyboardType="email-address"
           autoCapitalize="none"
+          value={email}
+          onChangeText={setEmail}
+          editable={!isLoading}
         />
         <Text style={styles.label}>Senha</Text>
         <View style={styles.passwordContainer}>
           <TextInput
             style={styles.inputPassword}
             placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;"
-            secureTextEntry
+            secureTextEntry={!showPassword}
+            value={password}
+            onChangeText={setPassword}
+            editable={!isLoading}
           />
-          <TouchableOpacity>
-            <Feather name="eye-off" size={24} color="black" />
+          <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+            <Feather name={showPassword ? "eye" : "eye-off"} size={24} color="black" />
           </TouchableOpacity>
         </View>
         <View style={styles.rememberContainer}>
@@ -53,8 +91,16 @@ export default function LoginScreen() {
           />
         </View>
       </View>
-      <TouchableOpacity style={styles.loginButton} onPress={() => router.push('/home' as any)}>
-        <Text style={styles.loginButtonText}>Fazer login</Text>
+      <TouchableOpacity 
+        style={[styles.loginButton, isLoading && styles.loginButtonDisabled]} 
+        onPress={handleLogin}
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <ActivityIndicator color="#fff" size="small" />
+        ) : (
+          <Text style={styles.loginButtonText}>Fazer login</Text>
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -150,5 +196,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     fontFamily: 'SpaceMono',
+  },
+  loginButtonDisabled: {
+    backgroundColor: '#9999FF',
   },
 });
