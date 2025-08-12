@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../services/supabase';
+import { logger } from '../services/logger';
 
 interface AuthContextType {
   session: Session | null;
@@ -37,19 +38,37 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     // Verificar sessão existente
+    logger.info('🔍 Verificando sessão existente...');
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      
+      if (session) {
+        logger.logAuth('LOGIN', session.user.id);
+        logger.info('✅ Sessão existente encontrada', { userId: session.user.id, email: session.user.email });
+      } else {
+        logger.info('❌ Nenhuma sessão existente encontrada');
+      }
     });
 
     // Escutar mudanças na autenticação
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      logger.info(`🔄 Mudança de autenticação: ${event}`, { userId: session?.user?.id });
+      
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      
+      if (event === 'SIGNED_IN' && session) {
+        logger.logAuth('LOGIN', session.user.id);
+      } else if (event === 'SIGNED_OUT') {
+        logger.logAuth('LOGOUT');
+      } else if (event === 'TOKEN_REFRESHED' && session) {
+        logger.logAuth('TOKEN_REFRESH', session.user.id);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -58,19 +77,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
+      logger.info('🔐 Tentativa de login iniciada', { email });
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        logger.logError('AUTH', 'signInWithPassword', `Erro no login: ${error.message}`);
         return { error: error.message };
       }
 
+      logger.info('✅ Login realizado com sucesso', { userId: data.user?.id, email: data.user?.email });
       // A sessão será automaticamente definida pelo listener onAuthStateChange
       return {};
     } catch (error: any) {
-      return { error: error.message || 'Erro inesperado durante o login' };
+      const errorMessage = error.message || 'Erro inesperado durante o login';
+      logger.logError('AUTH', 'signIn', errorMessage);
+      return { error: errorMessage };
     } finally {
       setLoading(false);
     }
@@ -79,9 +104,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signOut = async () => {
     try {
       setLoading(true);
+      logger.info('🚪 Iniciando logout...');
+      
       await supabase.auth.signOut();
+      logger.info('✅ Logout realizado com sucesso');
       // A sessão será automaticamente limpa pelo listener onAuthStateChange
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido durante logout';
+      logger.logError('AUTH', 'signOut', errorMessage);
       console.error('Erro durante logout:', error);
     } finally {
       setLoading(false);

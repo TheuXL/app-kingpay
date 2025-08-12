@@ -6,12 +6,18 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { AuthProvider } from '../contexts/AuthContext';
+import { initializeLogging } from '../services/logger';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
+
+  // Inicializar sistema de logging
+  if (loaded) {
+    initializeLogging();
+  }
 
   if (!loaded) {
     // Async font loading only occurs in development.

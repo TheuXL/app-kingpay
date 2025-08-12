@@ -2,10 +2,14 @@ import { Stack, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
+import { useNavigationLogger } from '../../hooks/useNavigationLogger';
 
 export default function AppLayout() {
   const { session, loading } = useAuth();
   const router = useRouter();
+  
+  // Ativar logging de navegação
+  useNavigationLogger();
 
   useEffect(() => {
     if (!loading && !session) {

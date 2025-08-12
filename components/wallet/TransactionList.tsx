@@ -1,7 +1,8 @@
 import { ThemedText } from '@/components/ThemedText';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, ActivityIndicator, Text } from 'react-native';
+import { ExtractItem } from '../../services/api';
 
 type Transaction = {
   name: string;
@@ -12,30 +13,130 @@ type Transaction = {
 };
 
 type TransactionListProps = {
-  transactions: Transaction[];
+  transactions?: Transaction[];
+  extractData?: ExtractItem[];
+  loading?: boolean;
+  useRealData?: boolean;
 };
 
-export function TransactionList({ transactions }: TransactionListProps) {
+// Função para formatar valores monetários
+const formatCurrency = (value: number): string => {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(value / 100);
+};
+
+// Função para formatar data
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  if (date.toDateString() === today.toDateString()) {
+    return 'Hoje';
+  } else if (date.toDateString() === yesterday.toDateString()) {
+    return 'Ontem';
+  } else {
+    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+  }
+};
+
+export function TransactionList({ transactions, extractData, loading, useRealData = false }: TransactionListProps) {
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#28a745" />
+        <Text style={styles.loadingText}>Carregando transações...</Text>
+      </View>
+    );
+  }
+
+  // Usar dados reais do extrato se disponível
+  const dataToShow = useRealData && extractData ? extractData : transactions || [];
+
+  if (dataToShow.length === 0) {
+    return (
+      <View style={styles.emptyContainer}>
+        <Ionicons name="receipt-outline" size={48} color="#ccc" />
+        <Text style={styles.emptyText}>Nenhuma transação encontrada</Text>
+      </View>
+    );
+  }
   return (
     <View>
-      {transactions.map((transaction, index) => (
-        <View key={index} style={styles.transactionItem}>
-          <View style={styles.transactionIcon}>
-            <Ionicons name="scan-outline" size={24} color="#28a745" />
+      {useRealData && extractData ? (
+        extractData.map((item, index) => (
+          <View key={index} style={styles.transactionItem}>
+            <View style={styles.iconContainer}>
+              <Ionicons 
+                name={item.type === 'credit' ? "arrow-down-circle" : "arrow-up-circle"} 
+                size={40} 
+                color={item.type === 'credit' ? "#28a745" : "#dc3545"} 
+              />
+            </View>
+            <View style={styles.transactionDetails}>
+              <ThemedText style={styles.transactionName}>
+                {item.type === 'credit' ? 'Recebimento' : 'Pagamento'}
+              </ThemedText>
+              <ThemedText style={styles.transactionEmail}>
+                {item.description || 'Transação via KingPay'}
+              </ThemedText>
+            </View>
+            <View style={styles.transactionAmount}>
+              <ThemedText style={[styles.amount, { color: item.type === 'credit' ? '#28a745' : '#dc3545' }]}>
+                {item.type === 'credit' ? '+' : '-'}{formatCurrency(Math.abs(item.amount))}
+              </ThemedText>
+              <ThemedText style={styles.date}>{formatDate(item.date)}</ThemedText>
+            </View>
           </View>
-          <View style={styles.transactionDetails}>
-            <ThemedText style={styles.transactionName}>{transaction.name}</ThemedText>
-            <ThemedText style={styles.transactionEmail}>{transaction.email}</ThemedText>
-            <ThemedText style={styles.transactionAmount}>{transaction.amount}</ThemedText>
+        ))
+      ) : (
+        transactions?.map((transaction, index) => (
+          <View key={index} style={styles.transactionItem}>
+            <View style={styles.iconContainer}>
+              <Ionicons name="person-circle" size={40} color="#ccc" />
+            </View>
+            <View style={styles.transactionDetails}>
+              <ThemedText style={styles.transactionName}>{transaction.name}</ThemedText>
+              <ThemedText style={styles.transactionEmail}>{transaction.email}</ThemedText>
+            </View>
+            <View style={styles.transactionAmount}>
+              <ThemedText style={styles.amount}>{transaction.amount}</ThemedText>
+              <ThemedText style={styles.date}>{transaction.date}</ThemedText>
+            </View>
           </View>
-          <ThemedText style={styles.transactionDate}>{transaction.date}</ThemedText>
-        </View>
-      ))}
+        ))
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 200,
+    marginVertical: 20,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#666',
+  },
+  emptyContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 200,
+    marginVertical: 20,
+  },
+  emptyText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+  },
   transactionItem: {
     flexDirection: 'row',
     alignItems: 'center',

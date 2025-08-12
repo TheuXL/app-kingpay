@@ -1,60 +1,63 @@
-import { ThemedText } from '@/components/ThemedText';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { BalanceCard } from '@/components/wallet/BalanceCard';
 import { TransactionList } from '@/components/wallet/TransactionList';
+import { useTransactionsData } from '@/hooks/useTransactionsData';
 import { Ionicons } from '@expo/vector-icons';
-import { ScrollView, StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useState } from 'react';
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+
+const mockTransactions = [
+  {
+    name: 'João Silva',
+    email: 'joao@email.com',
+    amount: 'R$ 250,00',
+    date: 'Hoje',
+    icon: 'person-circle',
+  },
+  {
+    name: 'Maria Santos',
+    email: 'maria@email.com',
+    amount: 'R$ 180,50',
+    date: 'Ontem',
+    icon: 'person-circle',
+  },
+  {
+    name: 'Pedro Costa',
+    email: 'pedro@email.com',
+    amount: 'R$ 320,75',
+    date: '15 Nov',
+    icon: 'person-circle',
+  },
+];
 
 export default function TransactionsScreen() {
-  const transactions = [
-    {
-      name: 'Capa Notebook Acer Nitro 5',
-      email: 'gabrielsantos@gmail.com',
-      amount: '+ R$ 245,50',
-      date: 'Hoje',
-      icon: require('../../assets/images/icon.png'),
-    },
-    {
-      name: 'Capa Notebook Acer Nitro 5',
-      email: 'gabrielsantos@gmail.com',
-      amount: '+ R$ 245,50',
-      date: 'Ontem',
-      icon: require('../../assets/images/icon.png'),
-    },
-    {
-      name: 'Capa Notebook Acer Nitro 5',
-      email: 'gabrielsantos@gmail.com',
-      amount: '+ R$ 245,50',
-      date: '13 de jul',
-      icon: require('../../assets/images/icon.png'),
-    },
-    {
-      name: 'Capa Notebook Acer Nitro 5',
-      email: 'gabrielsantos@gmail.com',
-      amount: '+ R$ 245,50',
-      date: '12 de jul',
-      icon: require('../../assets/images/icon.png'),
-    },
-  ];
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFilter, setSelectedFilter] = useState('Todos');
+  const { wallet, financial, extract, loading, error, refetch } = useTransactionsData();
+
+  // Filtrar transações baseado na busca e filtro selecionado
+  const filteredExtract = extract?.filter(item => {
+    const matchesSearch = !searchQuery || 
+      item.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesFilter = selectedFilter === 'Todos' ||
+      (selectedFilter === 'Entradas' && item.type === 'credit') ||
+      (selectedFilter === 'Saídas' && item.type === 'debit');
+    
+    return matchesSearch && matchesFilter;
+  });
 
   return (
     <View style={styles.container}>
       <ScreenHeader title="Transações" />
       <ScrollView style={styles.scrollContainer}>
         <View style={styles.content}>
-          <BalanceCard
-            approvedSales={789}
-            totalAmount="R$ 8.236,17"
-            percentageIncrease="+2,8%"
-            pixAmount="R$ 5.313,00"
-            cardAmount="R$ 6.341,97"
-            boletoAmount="R$ 956,13"
-          />
+          <BalanceCard walletData={wallet} financialData={financial} loading={loading} />
 
           <View style={styles.transactionsHeader}>
-            <ThemedText style={styles.transactionsTitle}>Transações</ThemedText>
+            <Text style={styles.transactionsTitle}>Transações</Text>
           <TouchableOpacity style={styles.viewAllContainer}>
-            <ThemedText style={styles.viewAll}>Ver tudo</ThemedText>
+            <Text style={styles.viewAll}>Ver tudo</Text>
             <Ionicons name="arrow-forward" size={16} color="#007bff" />
           </TouchableOpacity>
         </View>
@@ -66,6 +69,8 @@ export default function TransactionsScreen() {
               style={styles.searchInput}
               placeholder="Buscar transações"
               placeholderTextColor="#888"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
             />
           </View>
           <TouchableOpacity style={styles.filterButton}>
@@ -73,7 +78,34 @@ export default function TransactionsScreen() {
           </TouchableOpacity>
         </View>
 
-        <TransactionList transactions={transactions} />
+        <View style={styles.filterContainer}>
+          {['Todos', 'Entradas', 'Saídas', 'Pendentes'].map((filter) => (
+            <TouchableOpacity
+              key={filter}
+              style={[
+                styles.filterChip,
+                filter === selectedFilter && styles.activeFilterChip,
+              ]}
+              onPress={() => setSelectedFilter(filter)}
+            >
+              <Text
+                style={[
+                  styles.filterText,
+                  filter === selectedFilter && styles.activeFilterText,
+                ]}
+              >
+                {filter}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        <TransactionList 
+          extractData={filteredExtract} 
+          loading={loading} 
+          useRealData={true}
+          transactions={mockTransactions}
+        />
         </View>
       </ScrollView>
     </View>
@@ -156,5 +188,27 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.22,
     shadowRadius: 2.22,
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    gap: 10,
+  },
+  filterChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#f5f5f5',
+  },
+  activeFilterChip: {
+    backgroundColor: '#007AFF',
+  },
+  filterText: {
+    fontSize: 14,
+    color: '#666',
+  },
+  activeFilterText: {
+    color: '#fff',
   },
 });

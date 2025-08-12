@@ -3,12 +3,14 @@ import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import BalanceCards from '@/components/wallet/BalanceCards';
 import TransactionFilter from '@/components/wallet/TransactionFilter';
 import { TransactionList } from '@/components/wallet/TransactionList';
+import { useWalletData } from '@/hooks/useWalletData';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 export default function WalletScreen() {
   const [activeFilter, setActiveFilter] = useState('Extrato');
+  const { wallet, extract, loading, error, refetch } = useWalletData();
 
   const transactions = [
     {
@@ -30,18 +32,41 @@ export default function WalletScreen() {
   const renderContent = () => {
     switch (activeFilter) {
       case 'Extrato':
-        return <TransactionList transactions={transactions} />;
-      case 'Antecipações':
         return (
-          <View style={styles.emptyStateContainer}>
-            <Image source={require('../../assets/images/obj3d.png')} style={styles.emptyStateImage} />
-            <Text style={styles.emptyStateText}>Ainda não há nada por aqui...</Text>
-          </View>
+          <TransactionList 
+            extractData={extract} 
+            loading={loading} 
+            useRealData={true}
+            transactions={transactions}
+          />
         );
-      case 'Transferências':
-        return <TransactionList transactions={transactions} />;
+      case 'Entradas':
+        return (
+          <TransactionList 
+            extractData={extract?.filter(item => item.type === 'credit')} 
+            loading={loading} 
+            useRealData={true}
+            transactions={transactions.filter(() => true)}
+          />
+        );
+      case 'Saídas':
+        return (
+          <TransactionList 
+            extractData={extract?.filter(item => item.type === 'debit')} 
+            loading={loading} 
+            useRealData={true}
+            transactions={[]}
+          />
+        );
       default:
-        return null;
+        return (
+          <TransactionList 
+            extractData={extract} 
+            loading={loading} 
+            useRealData={true}
+            transactions={transactions}
+          />
+        );
     }
   };
 
@@ -49,7 +74,7 @@ export default function WalletScreen() {
     <View style={styles.container}>
       <ScreenHeader title="Carteira" />
       <ScrollView style={styles.scrollContainer}>
-        <BalanceCards />
+        <BalanceCards walletData={wallet} loading={loading} />
         <View style={styles.transactionsHeader}>
         <ThemedText type="subtitle">Movimentações</ThemedText>
         <TouchableOpacity style={styles.seeAllButton}>

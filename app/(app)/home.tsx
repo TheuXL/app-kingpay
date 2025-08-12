@@ -12,13 +12,13 @@ import FloatingMenu from '../../components/ui/FloatingMenu';
 import { useHomeData } from '../../hooks/useHomeData';
 
 export default function HomeScreen() {
-  const { walletData, financialData, extractData, loading, error } = useHomeData();
+  const { wallet, financial, extract, loading, error } = useHomeData();
 
   return (
     <View style={styles.container}>
       <ScrollView>
         <HomeHeader />
-        <BalanceCard walletData={walletData} loading={loading} />
+        <BalanceCard walletData={wallet} loading={loading} />
         <QuickActions />
         <KingPayJourneyCard />
       <View style={styles.salesSummaryHeader}>
@@ -29,14 +29,14 @@ export default function HomeScreen() {
         </View>
       </View>
       <SalesSummaryCard 
-        walletData={walletData} 
-        financialData={financialData} 
+        walletData={wallet} 
+        financialData={financial} 
         loading={loading} 
       />
-      <RefundsCard financialData={financialData} loading={loading} />
+      <RefundsCard financialData={financial} loading={loading} />
       <SalesMetricsCard 
-        walletData={walletData} 
-        financialData={financialData} 
+        walletData={wallet} 
+        financialData={financial} 
         loading={loading} 
       />
       <ExploreCard />

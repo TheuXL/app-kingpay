@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { logger } from './logger';
 
 const EDGE_FUNCTIONS_URL = process.env.EXPO_PUBLIC_EDGE_FUNCTIONS_URL || '';
 
@@ -17,26 +18,58 @@ const makeAuthenticatedRequest = async (
   endpoint: string,
   options: RequestInit = {}
 ): Promise<any> => {
+  const startTime = Date.now();
+  const method = options.method || 'GET';
+  const fullUrl = `${EDGE_FUNCTIONS_URL}${endpoint}`;
+  
   const token = await getAccessToken();
   
   if (!token) {
-    throw new Error('Token de acesso não encontrado. Usuário não autenticado.');
+    const error = 'Token de acesso não encontrado. Usuário não autenticado.';
+    logger.logError(method, fullUrl, error);
+    throw new Error(error);
   }
 
-  const response = await fetch(`${EDGE_FUNCTIONS_URL}${endpoint}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`,
-      ...options.headers,
-    },
-  });
+  const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`,
+    ...options.headers,
+  };
 
-  if (!response.ok) {
-    throw new Error(`Erro na requisição: ${response.status} ${response.statusText}`);
+  // Log da requisição
+  const requestData = options.body ? JSON.parse(options.body as string) : undefined;
+  const headersForLog: Record<string, string> = {
+    'Content-Type': headers['Content-Type'],
+    'Authorization': headers['Authorization']
+  };
+  const requestId = logger.logRequest(method, fullUrl, requestData, headersForLog);
+
+  try {
+    const response = await fetch(fullUrl, {
+      ...options,
+      headers,
+    });
+
+    const duration = Date.now() - startTime;
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      logger.logError(method, fullUrl, `${response.status} ${response.statusText}: ${errorText}`, response.status, duration);
+      throw new Error(`Erro na requisição: ${response.status} ${response.statusText}`);
+    }
+
+    const responseData = await response.json();
+    
+    // Log da resposta bem-sucedida
+    logger.logResponse(method, fullUrl, response.status, responseData, duration, requestId);
+    
+    return responseData;
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+    logger.logError(method, fullUrl, errorMessage, undefined, duration);
+    throw error;
   }
-
-  return response.json();
 };
 
 // Interfaces para tipagem dos dados

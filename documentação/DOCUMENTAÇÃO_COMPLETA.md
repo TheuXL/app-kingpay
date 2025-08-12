@@ -595,3 +595,182 @@ O app deve guadar o `access_token` ele será usado em preticamente todos os outr
 *   **CARTEIRA (`GET /wallet`, `.../extrato/:userId`):** Retorna o resumo completo dos saldos de um usuário (disponível, a receber, etc.) e o extrato detalhado de movimentações.
 *   **WEBHOOKS (`POST`/`GET`/`PUT`/`DELETE`):** CRUD completo para gerenciar webhooks.
 *   **FATURAS (`GET /billings`):** Lista as faturas (provavelmente relacionadas a cobranças de mensalidade da plataforma).
+
+
+Abaixo está a lista completa de endpoints, organizada por módulo, validada a partir do arquivo JSON. Note que agrupei algumas de suas entradas que apontavam para o mesmo endpoint com ações diferentes.
+
+#### **Módulo: Auth**
+*   `POST /auth/v1/token` - (Gerar token) - Endpoint principal de login. A coleção contém uma cópia ("Gerar token Copy") que é redundante.
+*   `POST /auth/v1/signup` - (Criar Conta)
+
+#### **Módulo: Código de Segurança**
+*   `POST /functions/v1/validation-codes/generate` - (Gerar Código)
+*   `POST /functions/v1/validation-codes/validate` - (Validar Código)
+
+#### **Módulo: Tickets (Suporte)**
+*   `POST /functions/v1/support-tickets` - Endpoint único que atua como dispatcher para várias ações, incluindo:
+    *   `create_ticket`
+    *   `list_tickets`
+    *   `send_message`
+    *   `get_messages`
+    *   `check_unread_messages`
+    *   `mark_message_read`
+    *   `get_ticket`
+    *   `get_metrics`
+    *   `update_status`
+
+#### **Módulo: Transações**
+*   `POST /functions/v1/transactions` - (Gerar Pix, Cartão, etc.)
+*   `GET /functions/v1/credentials` - (Obter Credenciais)
+*   `POST /functions/v1/webhookfx` - (Receber Webhooks de transações)
+
+#### **Módulo: Subcontas (Integração Iugu)**
+*   `POST /proxy` - (Proxy para criar conta no Marketplace Iugu)
+*   `POST /request_verification` - (Proxy para enviar KYC para Iugu)
+*   `POST /v1/web_hooks` - (Proxy para criar/listar webhooks na Iugu)
+*   `GET /functions/v1/subconta` - (Listar subcontas do cliente)
+*   `POST /functions/v1/subconta` - (Criar subconta e enviar KYC)
+*   `PUT /functions/v1/subconta/resend_documents` - (Reenviar documentos da subconta)
+*   `POST /functions/v1/subconta/checkstatus` - (Verificar status da subconta)
+*   `POST /functions/v1/subconta/check_kyc` - (Verificar status do KYC da subconta)
+
+#### **Módulo: Logs**
+*   `GET /functions/v1/audit-log` - (Obter logs de auditoria)
+
+#### **Módulo: Taxas**
+*   `POST /functions/v1/taxas` - (Calcular taxas de uma transação)
+
+#### **Módulo: Chaves Pix (Admin)**
+*   `GET /functions/v1/pix-key` - (Listar todas as chaves Pix)
+*   `PATCH /functions/v1/pix-key/:id/approve` - (Aprovar/Reprovar chave Pix)
+
+#### **Módulo: Configurações & Personalização**
+*   `GET /functions/v1/configuracoes/termos` - (Obter Termos de Uso)
+*   `PUT /functions/v1/configuracoes/termos` - (Atualizar Termos de Uso)
+*   `GET /functions/v1/configuracoes` - (Obter configurações gerais do admin)
+*   `PUT /functions/v1/configuracoes` - (Atualizar configurações gerais do admin)
+*   `GET /functions/v1/personalization` - (Obter dados de personalização da UI)
+*   `PUT /functions/v1/personalization` - (Atualizar dados de personalização da UI)
+*   `GET /functions/v1/config-companie-view` - (Obter configurações da empresa para visualização do cliente)
+*   `PUT /functions/v1/configuracoes/emails` - (Atualizar templates de e-mail)
+*   `PUT /functions/v1/configuracoes/acecitar-termos` - (Endpoint para o cliente aceitar os termos)
+
+#### **Módulo: UtmFy (Pixel Tracker)**
+*   `GET /functions/v1/pixelTracker` - (Buscar configurações de pixel)
+*   `POST /functions/v1/pixelTracker` - (Criar configuração de pixel)
+*   `PATCH /functions/v1/pixelTracker` - (Atualizar configuração de pixel)
+
+#### **Módulo: Análise de Risco**
+*   `POST /functions/v1/risk` - (Executar análise de risco, possivelmente para saques)
+
+#### **Módulo: Clientes**
+*   `GET /functions/v1/clientes` - (Listar clientes)
+*   `GET /functions/v1/clientes/:id` - (Obter cliente específico)
+*   `POST /functions/v1/clientes` - (Criar cliente)
+*   `PUT /functions/v1/clientes` - (Editar cliente)
+
+#### **Módulo: Link de Pagamento**
+*   `GET /functions/v1/link-pagamentos` - (Listar links ou obter um por ID)
+*   `GET /functions/v1/link-pagamento-view/:id` - (Endpoint público para visualização do link)
+*   `POST /functions/v1/link-pagamentos` - (Criar link)
+*   `PATCH /functions/v1/link-pagamentos/:id` - (Editar link)
+
+#### **Módulo: Padrões (Configurações Default para Empresas)**
+*   `GET /functions/v1/standard` - (Obter configurações padrão)
+*   `PATCH /functions/v1/standard/last` - (Atualizar as configurações padrão)
+
+#### **Módulo: Chave Pix (Cliente)**
+*   `GET /functions/v1/pix-key` - (Buscar chaves Pix do usuário logado)
+*   `POST /functions/v1/pix-key` - (Criar chave Pix)
+*   `PUT /functions/v1/pix-key/:id` - (Atualizar chave Pix)
+
+#### **Módulo: Alertas**
+*   `GET /functions/v1/alerts` - (Buscar alertas)
+*   `POST /functions/v1/alerts` - (Criar alerta - Admin)
+*   `POST /functions/v1/alerts/mark-viewed` - (Marcar alerta como lido)
+*   `DELETE /functions/v1/alerts` - (Deletar alerta - Admin)
+
+#### **Módulo: Dashboard & Analytics**
+*   `POST /functions/v1/dados-dashboard` - (Dados principais do dashboard)
+*   `GET /functions/v1/analytics-reports/top-sellers/:startDate/:endDate` - (Relatório de top vendedores)
+*   `POST /functions/v1/dados-dashboard/top-produtos` - (Relatório de top produtos)
+*   `POST /functions/v1/dados-dashboard/grafico` - (Dados para o gráfico de faturamento)
+*   `POST /functions/v1/dados-dashboard/infos-adicionais` - (Dados de métodos de pagamento e parcelas)
+*   `POST /functions/v1/dados-dashboard/top-sellers` - (Relatório de top vendedores - *duplicado*)
+*   `POST /functions/v1/dados-dashboard/providers` - (Relatório de provedores/checkouts)
+*   `POST /functions/v1/dados-dashboard/acquirer` - (Relatório de performance por adquirente)
+*   `POST /functions/v1/faturamento-whitelabel` - (Dados financeiros do whitelabel)
+*   `POST /functions/v1/whitelabel-financeiro` - (Dados de saldo do whitelabel)
+
+#### **Módulo: Saques (Withdrawals)**
+*   `GET /functions/v1/saques` - (Listar saques)
+*   `GET /functions/v1/saques/aggregates` - (Dados agregados de saques)
+*   `POST /functions/v1/withdrawals` - (Solicitar saque)
+*   `PATCH /functions/v1/withdrawals/:id` - (Aprovar, negar ou marcar como pago manualmente)
+
+#### **Módulo: Antecipações**
+*   `GET /functions/v1/antecipacoes/anticipations` - (Listar antecipações)
+*   `POST /functions/v1/antecipacoes/create` - (Solicitar antecipação)
+*   `POST /functions/v1/antecipacoes/approve` - (Aprovar antecipação - Admin)
+*   `PATCH /functions/v1/antecipacoes/deny` - (Negar antecipação - Admin)
+
+#### **Módulo: Usuários (User Management)**
+*   `GET /functions/v1/users` - (Listar todos os usuários)
+*   `GET /functions/v1/users/:id` - (Buscar usuário por ID)
+*   `GET /functions/v1/users/:id/apikey` - (Obter chave de API do usuário)
+*   `GET /functions/v1/users/:id/permissions` - (Obter permissões do usuário)
+*   `POST /functions/v1/users/create` - (Criar novo usuário)
+*   `POST /functions/v1/users/register` - (Registrar novo usuário e sua empresa)
+*   `PATCH /functions/v1/users/:id/edit` - (Editar perfil do usuário)
+*   `PATCH /functions/v1/users/:id/permissions` - (Atualizar permissões do usuário)
+
+#### **Módulo: Carteira (Wallet)**
+*   `POST /functions/v1/wallet/balance-management` - (Gerenciar saldo - Adicionar/Remover)
+*   `GET /functions/v1/wallet` - (Obter informações da carteira)
+*   `GET /functions/v1/extrato/:userId` - (Obter extrato da carteira)
+
+#### **Módulo: Webhooks (Configuração)**
+*   `GET /functions/v1/webhook` - (Listar webhooks configurados)
+*   `POST /functions/v1/webhook` - (Criar um novo webhook)
+*   `PUT /functions/v1/webhook/:webhookId` - (Editar um webhook)
+*   `DELETE /functions/v1/webhook/:webhookId` - (Deletar um webhook)
+
+#### **Módulo: Faturas**
+*   `GET /functions/v1/billings` - (Listar faturas)
+*   `PATCH /functions/v1/billings/pay` - (Marcar fatura como paga)
+
+#### **Módulo: BaaS (Banking as a Service - Admin)**
+*   `GET /functions/v1/baas` - (Listar todos os provedores BaaS)
+*   `GET /functions/v1/baas/:id` - (Obter um BaaS específico)
+*   `GET /functions/v1/baas/:id/taxas` - (Obter taxas de um BaaS)
+*   `PATCH /functions/v1/baas/:id/active` - (Ativar/desativar um BaaS)
+*   `PATCH /functions/v1/baas/:id/taxa` - (Alterar taxa de um BaaS)
+
+#### **Módulo: Adquirentes (Admin)**
+*   `GET /functions/v1/acquirers` - (Listar todas as adquirentes)
+*   `GET /functions/v1/acquirers/:id` - (Obter uma adquirente específica)
+*   `GET /functions/v1/acquirers/:id/taxas` - (Obter taxas de uma adquirente)
+*   `PATCH /functions/v1/acquirers/:id/active` - (Ativar/desativar uma adquirente)
+*   `PATCH /functions/v1/acquirers/:id/taxas` - (Alterar taxas de uma adquirente)
+
+#### **Módulo: Empresa (Admin & Cliente)**
+*   `GET /functions/v1/companies` - (Listar todas as empresas)
+*   `GET /functions/v1/companies/contagem` - (Obter contagem de empresas por status)
+*   `GET /functions/v1/companies/:id` - (Obter detalhes de uma empresa)
+*   `GET /functions/v1/companies/:id/taxas` - (Obter taxas de uma empresa)
+*   `GET /functions/v1/companies/:id/reserva` - (Obter configurações de reserva de uma empresa)
+*   `GET /functions/v1/companies/:id/config` - (Obter configurações gerais de uma empresa)
+*   `GET /functions/v1/companies/:id/docs` - (Obter documentos de uma empresa)
+*   `GET /functions/v1/companies/:id/adq` - (Obter adquirentes configurados para uma empresa)
+*   `GET /functions/v1/companies/:id/financial-info` - (Obter informações financeiras de uma empresa)
+*   `POST /functions/v1/companies` - (Criar nova empresa)
+*   `PATCH /functions/v1/companies/:id/taxas` - (Atualizar taxas de uma empresa)
+*   `PATCH /functions/v1/companies/:id/taxas-bulk` - (Atualizar taxas em massa para várias empresas)
+*   `PATCH /functions/v1/companies/:id/docs` - (Atualizar documentos de uma empresa)
+*   `PATCH /functions/v1/companies/:id/config` - (Atualizar configurações de uma empresa)
+*   `PATCH /functions/v1/companies/:id/config-bulk` - (Atualizar configurações em massa)
+*   `PATCH /functions/v1/companies/:id/reserva` - (Atualizar configurações de reserva)
+*   `PATCH /functions/v1/companies/:id/adq` - (Atualizar adquirentes de uma empresa)
+*   `PATCH /functions/v1/companies/:id/status` - (Aprovar/Negar/Bloquear uma empresa)
+*   **Observação:** A requisição "Editar Reserva Em massa" é um comando `curl` na URL. O endpoint correto é `PATCH /functions/v1/companies/:id/reserva-bulk`.
+

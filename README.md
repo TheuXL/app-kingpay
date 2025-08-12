@@ -48,3 +48,12 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+## Como Funciona:
+Todos os logs aparecem apenas no terminal durante o desenvolvimento, com cores e formatação para fácil leitura:
+
+- 🔵 Azul : Informações gerais
+- 🟡 Amarelo : Requisições HTTP
+- 🟢 Verde : Respostas bem-sucedidas
+- 🔴 Vermelho : Erros
+- 🟣 Roxo : Métricas de tempo

@@ -54,6 +54,7 @@ const testState = {
     ticketId: null, paymentLinkId: null, alertId: null, baasId: null, acquirerId: null,
     webhookId: null, saqueId: null, antecipacaoId: null, clienteId: null, pixKeyAdminId: null, utmId: null,
     apiSecretKey: null, // Adicionado para armazenar a chave de API
+    originalPersonalization: null, // Armazena a personalização original
     successCount: 0,
     failureCount: 0,
     skippedCount: 0,
@@ -277,13 +278,23 @@ async function testSubcontaClienteModule() { printHeader('Subconta (Cliente)'); 
 
 async function testConfiguracoesEPersonalizacaoModule() {
     printHeader('Configurações e Personalização');
+    
+    // Primeiro, obter a personalização atual para restaurar depois
+    const currentPersonalizationRes = await invoke('personalization', 'GET', {}, 25);
+    if (currentPersonalizationRes.success && currentPersonalizationRes.data) {
+        testState.originalPersonalization = currentPersonalizationRes.data;
+        log(color.cyan, '  -> Personalização original salva para restauração posterior.');
+    }
+    
     await invoke('configuracoes/termos', 'GET', {}, 21);
     await invoke('configuracoes/termos', 'PUT', { termos: 'Este é o novo texto dos Termos de Uso.' }, 22);
     const configPayload = { descontarChargebackSaldoDisponivel: true, aprovar_chave_pix: false };
     await invoke('configuracoes', 'PUT', configPayload, 23);
-    const personalizationPayload = { gateway_name: 'KingPay Test Runner', primary_color: '#FF0000' };
+    
+    // Teste de personalização SEM alterar cores - apenas gateway_name
+    const personalizationPayload = { gateway_name: 'KingPay Test Runner' };
     await invoke('personalization', 'PUT', personalizationPayload, 24);
-    await invoke('personalization', 'GET', {}, 25);
+    
     await invoke('config-companie-view', 'GET', {}, 26);
 }
 
@@ -566,13 +577,28 @@ async function testEmpresaModule() {
     await invoke('companies/contagem', 'GET', {}, 100);
 }
 
+// --- Função para Restaurar Personalização Original ---
+async function restoreOriginalPersonalization() {
+    if (testState.originalPersonalization) {
+        printHeader('Restaurando Personalização Original');
+        const restoreRes = await invoke('personalization', 'PUT', testState.originalPersonalization, null);
+        if (restoreRes.success) {
+            log(color.green, '  -> ✅ Personalização original restaurada com sucesso.');
+        } else {
+            log(color.red, '  -> ❌ Falha ao restaurar personalização original.');
+        }
+    } else {
+        log(color.yellow, '  -> ⚠️ Nenhuma personalização original foi salva para restaurar.');
+    }
+}
+
 const printSummary = () => {
-    const total = testState.successCount + testState.failureCount;
+    const total = testState.successCount + testState.failureCount + testState.skippedCount;
     log(color.blue, '\n' + '='.repeat(40));
     log(color.blue, '📊 RESUMO DOS TESTES');
     log(color.blue, '='.repeat(40));
-    log(color.cyan, `Total de Endpoints Cobertos (executados + pulados): ${total + testState.skippedCount}`);
-    log(color.cyan, `Total Executados: ${total}`);
+    log(color.cyan, `Total de Endpoints Cobertos (executados + pulados): ${total}`);
+    log(color.cyan, `Total Executados: ${testState.successCount + testState.failureCount}`);
     log(color.green, `✅ Sucessos: ${testState.successCount}`);
     log(color.red, `❌ Falhas: ${testState.failureCount}`);
     log(color.yellow, `⏭️ Pulados: ${testState.skippedCount}`);
@@ -604,6 +630,9 @@ async function main() {
         await testModule();
         await new Promise(resolve => setTimeout(resolve, 200)); // Pequeno delay
     }
+
+    // Restaurar personalização original antes de finalizar
+    await restoreOriginalPersonalization();
 
     log(color.blue, '\n🏁 Suíte de testes de cobertura total concluída.');
     printSummary();
