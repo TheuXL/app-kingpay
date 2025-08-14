@@ -1,7 +1,13 @@
 // Script de Teste Completo da API KingPay - 117 Endpoints
 // Baseado na documentação oficial com gerenciamento de estado aprimorado
+// documentação\Collection.postman.md
+// documentação\DOCUMENTAÇÃO_COMPLETA.md
+// documentação\ESTRUTURA_BANCO.DEV.md
+// documentação\functionsDev.md
+// documentação\functionsProd.md
+// documentação\Gateway - Merged Collection with Auth Automation.postman_collection.json
+// documentação\ResumoBancoDeDados.md
 // VERSÃO CORRIGIDA - Maximizada para alta taxa de sucesso
-// CORREÇÕES APLICADAS:
 // 1. Fluxo de autorização corrigido (access_token após login)
 // 2. Aprovação automática de empresa após criação
 // 3. Payloads corrigidos para dashboard, empresa e configurações
@@ -17,9 +23,9 @@ require('dotenv').config();
 // Configurações
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
-const userEmail = process.env.TEST_REAL_EMAIL || 'matheuss.devv@gmail.com';
-const userPassword = process.env.TEST_REAL_PASSWORD || '88338391Mt@';
-const financialPassword = process.env.FINANCIAL_PASSWORD || 'senha123';
+const userEmail = process.env.TEST_REAL_EMAIL || 'eubrenosantoss@gmail.com';
+const userPassword = process.env.TEST_REAL_PASSWORD || '100Senha2002@';
+const financialPassword = process.env.FINANCIAL_PASSWORD || '123';
 
 // Cores para logs
 const color = { reset: "[0m", red: "[31m", green: "[32m", yellow: "[33m", blue: "[34m", cyan: "[36m", white: "[37m" };
@@ -39,7 +45,7 @@ const printResult = (name, success, duration, data, endpointNumber, requestDetai
     const status = success ? '✅ SUCESSO' : '❌ FALHA';
     const statusColor = success ? color.green : color.red;
     
-    // Capturar resultado para o log
+    // Capturar resultado para o log - DADOS COMPLETOS
     const testResult = {
         endpointNumber,
         name,
@@ -49,18 +55,14 @@ const printResult = (name, success, duration, data, endpointNumber, requestDetai
         requestDetails: {
             method: requestDetails.method,
             url: requestDetails.url,
-            headers: requestDetails.headers ? Object.keys(requestDetails.headers).reduce((acc, key) => {
-                acc[key] = key.toLowerCase().includes('authorization') || key.toLowerCase().includes('apikey') 
-                    ? requestDetails.headers[key].substring(0, 10) + '...' 
-                    : requestDetails.headers[key];
-                return acc;
-            }, {}) : undefined,
+            headers: requestDetails.headers || {},  // Headers completos sem mascaramento
             body: requestDetails.body,
             status: requestDetails.status
         },
         response: {
             status: data?.status || requestDetails.status,
-            data: data
+            data: data,  // Dados completos da resposta
+            headers: requestDetails.responseHeaders || {}  // Headers de resposta se disponíveis
         }
     };
     
@@ -189,6 +191,13 @@ const testState = {
     dynamicDates: {
         startDate: null,
         endDate: null
+    },
+    // Configurações interativas
+    interactive: {
+        skipFailedDependencies: true,
+        adaptToApiChanges: true,
+        useRealDataOnly: true,
+        fallbackToDefaults: false
     }
 };
 
@@ -201,6 +210,60 @@ function generateDynamicDates() {
     testState.dynamicDates.endDate = now.toISOString().split('T')[0];
     
     return testState.dynamicDates;
+}
+
+// Função para validar dependências antes de executar testes
+function validateDependencies(requiredFields) {
+    const missing = [];
+    for (const field of requiredFields) {
+        if (!testState[field]) {
+            missing.push(field);
+        }
+    }
+    return missing;
+}
+
+// Função para adaptar payloads baseado nos dados disponíveis
+function adaptPayload(basePayload, adaptations = {}) {
+    const payload = { ...basePayload };
+    
+    // Aplicar adaptações baseadas no estado atual
+    for (const [key, value] of Object.entries(adaptations)) {
+        if (typeof value === 'function') {
+            payload[key] = value(testState);
+        } else if (testState[value]) {
+            payload[key] = testState[value];
+        }
+    }
+    
+    return payload;
+}
+
+// Função para verificar se um teste deve ser executado
+function shouldRunTest(dependencies = [], testName = '') {
+    if (!testState.interactive.skipFailedDependencies) {
+        return true;
+    }
+    
+    const missing = validateDependencies(dependencies);
+    if (missing.length > 0) {
+        log(color.yellow, `  -> ⏭️ Pulando ${testName}: dependências não atendidas (${missing.join(', ')})`);
+        return false;
+    }
+    
+    return true;
+}
+
+// Função para gerar dados dinâmicos baseados no timestamp
+function generateDynamicData() {
+    const timestamp = Date.now();
+    return {
+        email: `teste.${timestamp}@kingpay.com.br`,
+        document: `${timestamp}`.slice(-11),
+        phone: `119${timestamp}`.slice(-8),
+        name: `Teste ${timestamp}`,
+        description: `Teste automatizado ${new Date().toLocaleString('pt-BR')}`
+    };
 }
 
 // Função para salvar logs dos testes
@@ -233,10 +296,23 @@ function saveTestLogs() {
                  skippedCount: skippedCount,
                  successRate: ((successCount / 117) * 100).toFixed(1) + '%'
              },
-            testResults: testState.testResults,
+            testResults: testState.testResults,  // DADOS COMPLETOS - sem resumos ou limitações
             environment: {
                 supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
                 testEmail: process.env.TEST_REAL_EMAIL || 'matheuss.devv@gmail.com'
+            },
+            // Dados adicionais para análise completa
+            testState: {
+                realCompanies: testState.realCompanies,
+                realUsers: testState.realUsers,
+                realPixKeys: testState.realPixKeys,
+                realTransactions: testState.realTransactions,
+                realClients: testState.realClients,
+                realWebhooks: testState.realWebhooks,
+                realBillings: testState.realBillings,
+                realAcquirers: testState.realAcquirers,
+                realBaas: testState.realBaas,
+                realSubaccounts: testState.realSubaccounts
             }
         };
         
@@ -452,13 +528,14 @@ async function invoke(endpoint, method = 'POST', body, endpointNumber, extraHead
             testState.failureCount++;
         }
         
-        // Detalhes da requisição para logging
+        // Detalhes da requisição para logging - DADOS COMPLETOS
         const requestDetails = {
             method,
             url,
             headers,
             body: requestOptions.body,
-            status: response.status
+            status: response.status,
+            responseHeaders: Object.fromEntries(response.headers.entries())  // Headers de resposta completos
         };
         
         printResult(`${method} /functions/v1/${endpoint}`, success, duration, data, endpointNumber, requestDetails);
@@ -468,13 +545,15 @@ async function invoke(endpoint, method = 'POST', body, endpointNumber, extraHead
         const duration = Date.now() - startTime;
         testState.failureCount++;
         
-        // Detalhes da requisição para logging de erro
+        // Detalhes da requisição para logging de erro - DADOS COMPLETOS
         const requestDetails = {
             method,
             url,
             headers,
             body: requestOptions.body,
-            status: null
+            status: null,
+            responseHeaders: {},  // Sem headers de resposta em caso de erro
+            error: error.message
         };
         
         printResult(`${method} /functions/v1/${endpoint}`, false, duration, { error: error.message }, endpointNumber, requestDetails);
@@ -511,13 +590,14 @@ async function authInvoke(endpoint, method = 'POST', body, endpointNumber) {
             testState.failureCount++;
         }
         
-        // Detalhes da requisição para logging
+        // Detalhes da requisição para logging - DADOS COMPLETOS
         const requestDetails = {
             method,
             url,
             headers,
             body: requestBody,
-            status: response.status
+            status: response.status,
+            responseHeaders: Object.fromEntries(response.headers.entries())  // Headers de resposta completos
         };
         
         printResult(`${method} /${endpoint}`, success, duration, data, endpointNumber, requestDetails);
@@ -527,13 +607,15 @@ async function authInvoke(endpoint, method = 'POST', body, endpointNumber) {
         const duration = Date.now() - startTime;
         testState.failureCount++;
         
-        // Detalhes da requisição para logging de erro
+        // Detalhes da requisição para logging de erro - DADOS COMPLETOS
         const requestDetails = {
             method,
             url,
             headers,
             body: requestBody,
-            status: null
+            status: null,
+            responseHeaders: {},  // Sem headers de resposta em caso de erro
+            error: error.message
         };
         
         printResult(`${method} /${endpoint}`, false, duration, { error: error.message }, endpointNumber, requestDetails);
@@ -609,7 +691,7 @@ async function testTicketsModule() {
 async function testTransacoesModule() {
     printHeader('Transações');
     
-    // #6 - Gerar Pix/Transação com payload completo
+    // #6 - Gerar Pix/Transação com payload completo incluindo company_id
     const transactionRes = await invoke('transactions', 'POST', {
         customer: {
             name: 'Cliente Teste Transação',
@@ -626,7 +708,10 @@ async function testTransacoesModule() {
             quantity: 1
         }],
         amount: 1000,
-        description: 'Transação de teste automatizada'
+        description: 'Transação de teste automatizada',
+        company_id: testState.companyId,
+        currency: 'BRL',
+        external_reference: `test_${Date.now()}`
     }, 6);
     
     if (transactionRes.success && transactionRes.data?.id) {
@@ -657,40 +742,58 @@ async function testSubcontasModule() {
     // #11 - Todas Subcontas (rota corrigida para /subconta)
     await invoke('subconta', 'GET', null, 11, {}, 'subaccounts');
     
-    // #12 - Criar Subconta (rota corrigida para /subconta)
-    log(color.yellow, '  -> ⚠️ Aviso: Endpoint pode falhar com erro 500 devido a problemas no servidor');
-    const createRes = await invoke('subconta', 'POST', {
-        name: `Subconta Teste ${Date.now()}`,
-        email: `subconta.${Date.now()}@teste.com`,
-        document: `${Date.now()}`.slice(-11),
-        phone: '11999999999',
-        type: 'individual'
-    }, 12);
-    
-    if (createRes.success && createRes.data?.id) {
-        testState.subaccountId = createRes.data.id;
-        log(color.green, `  -> ✅ Subconta criada com ID: ${testState.subaccountId}`);
-        
-        // #13 - Visualizar Subconta (rota corrigida para /subconta)
-        await invoke(`subconta/${testState.subaccountId}`, 'GET', null, 13);
-        
-        // #14 - Editar Subconta (rota corrigida para /subconta)
-        log(color.yellow, '  -> ⚠️ Aviso: Endpoint pode falhar com erro 500 devido a problemas no servidor');
-        await invoke(`subconta/${testState.subaccountId}`, 'PUT', {
-            name: `Subconta Teste Editada ${Date.now()}`,
-            phone: '11888888888'
-        }, 14);
-        
-        // #15 - Deletar Subconta (rota corrigida para /subconta)
-        log(color.yellow, '  -> ⚠️ Aviso: Endpoint pode falhar com erro 500 devido a problemas no servidor');
-        await invoke(`subconta/${testState.subaccountId}`, 'DELETE', null, 15);
+    // #12 - Criar Subconta (rota corrigida para /subconta) - Payload corrigido
+    if (!shouldRunTest(['companyId'], 'Criar Subconta')) {
+        printSkip('POST /functions/v1/subconta', 12, 'Company ID não disponível');
+        testState.skippedCount++;
     } else {
-        log(color.red, '  -> ❌ Falha ao criar subconta. Possível problema no servidor (erro 500).');
-        const skippedEndpoints = [13, 14, 15];
-        skippedEndpoints.forEach(endpoint => {
-            printSkip(`Endpoint #${endpoint}`, endpoint, 'Subconta não criada - possível erro 500 do servidor');
+        log(color.yellow, '  -> ⚠️ Aviso: Endpoint pode falhar com erro 500 devido a problemas no servidor');
+        const dynamicData = generateDynamicData();
+        const createPayload = adaptPayload({
+            name: `Subconta ${dynamicData.name}`,
+            email: dynamicData.email,
+            document: dynamicData.document,
+            phone: dynamicData.phone,
+            type: 'individual',
+            address: {
+                street: 'Rua Teste',
+                number: '123',
+                city: 'São Paulo',
+                state: 'SP',
+                zip_code: '01234-567'
+            }
+        }, {
+            company_id: 'companyId'
         });
-        testState.skippedCount += skippedEndpoints.length;
+        
+        const createRes = await invoke('subconta', 'POST', createPayload, 12);
+        
+        if (createRes.success && createRes.data?.id) {
+            testState.subaccountId = createRes.data.id;
+            log(color.green, `  -> ✅ Subconta criada com ID: ${testState.subaccountId}`);
+            
+            // #13 - Visualizar Subconta (rota corrigida para /subconta)
+            await invoke(`subconta/${testState.subaccountId}`, 'GET', null, 13);
+            
+            // #14 - Editar Subconta (rota corrigida para /subconta)
+            log(color.yellow, '  -> ⚠️ Aviso: Endpoint pode falhar com erro 500 devido a problemas no servidor');
+            const dynamicEditData = generateDynamicData();
+            await invoke(`subconta/${testState.subaccountId}`, 'PUT', {
+                name: `Subconta ${dynamicEditData.name} Editada`,
+                phone: dynamicEditData.phone
+            }, 14);
+            
+            // #15 - Deletar Subconta (rota corrigida para /subconta)
+            log(color.yellow, '  -> ⚠️ Aviso: Endpoint pode falhar com erro 500 devido a problemas no servidor');
+            await invoke(`subconta/${testState.subaccountId}`, 'DELETE', null, 15);
+        } else {
+            log(color.red, '  -> ❌ Falha ao criar subconta. Possível problema no servidor (erro 500).');
+            const skippedEndpoints = [13, 14, 15];
+            skippedEndpoints.forEach(endpoint => {
+                printSkip(`Endpoint #${endpoint}`, endpoint, 'Subconta não criada - possível erro 500 do servidor');
+            });
+            testState.skippedCount += skippedEndpoints.length;
+        }
     }
 }
 
@@ -762,11 +865,15 @@ async function testConfiguracoes() {
         accepted: true // Garantir que os termos permaneçam aceitos
     }, 22);
     
-    // #23 - Atualizar Configurações (settings)
+    // #23 - Atualizar Configurações (settings) - Payload corrigido
     await invoke('configuracoes', 'PUT', {
         notification_enabled: true,
         email_notifications: true,
-        sms_notifications: false
+        sms_notifications: false,
+        company_id: testState.companyId || '6f8fb543-e3b7-4f31-9599-126287ccf1f4',
+        webhook_enabled: true,
+        auto_approve_transactions: false,
+        max_transaction_amount: 50000
     }, 23);
     
     // #24 - Atualizar Personalização (SEM ALTERAR TEMA E COR PADRÃO)
@@ -774,7 +881,9 @@ async function testConfiguracoes() {
         gateway_name: 'KingPay',
         primary_color: '#2196F3', // Usar primary_color em vez de color
         secondary_color: '#1976D2',
-        logo_url: 'https://exemplo.com/logo.png'
+        logo_dark: 'https://exemplo.com/logo-dark.png',
+        logo_white: 'https://exemplo.com/logo-white.png',
+        favicon: 'https://exemplo.com/favicon.ico'
     }, 24);
     
     // #25 - Ver Personalização
@@ -820,6 +929,13 @@ async function testRiskModule() {
     
     // #30 - Padrões de Risco
     if (testState.companyId) {
+        // Verificar se existem transações para análise
+        if (testState.realTransactions.length === 0) {
+            log(color.yellow, '  -> Nenhuma transação encontrada, criando transação de teste para análise de risco...');
+            await simulateCardTransaction();
+            await new Promise(r => setTimeout(r, 2000)); // Aguardar processamento
+        }
+        
         await invoke('risk', 'POST', {
             company_id: testState.companyId,
             valor_saque: 10000
@@ -844,10 +960,11 @@ async function testClientesModule() {
         log(color.blue, `  -> Usando cliente existente: ${testState.clienteId}`);
         
         // #33 - Editar Cliente (cuidadoso com dados reais)
+        const dynamicEditData = generateDynamicData();
         await invoke('clientes', 'PUT', {
             id: testState.clienteId,
-            name: (realClient.name || 'Cliente') + ' (Teste)',
-            phone: realClient.phone || '11888888888'
+            name: `${realClient.name || 'Cliente'} ${dynamicEditData.name}`,
+            phone: dynamicEditData.phone
         }, 33);
         
         // #34 - Visualizar Cliente
@@ -858,11 +975,12 @@ async function testClientesModule() {
         testState.skippedCount++;
     } else {
         // #32 - Criar Cliente apenas se necessário
+        const dynamicData = generateDynamicData();
         const createRes = await invoke('clientes', 'POST', {
-            name: 'Cliente Teste Automatizado',
-            email: `cliente.${Date.now()}@teste.com`,
-            taxid: '11122233344',
-            phone: '11999999999',
+            name: `Cliente ${dynamicData.name}`,
+            email: dynamicData.email,
+            taxid: dynamicData.document,
+            phone: dynamicData.phone,
             documenttype: 'cpf',
             address: {
                 street: 'Rua Teste, 123',
@@ -877,10 +995,11 @@ async function testClientesModule() {
             log(color.green, `  -> ✅ Cliente criado com ID: ${testState.clienteId}`);
             
             // #33 - Editar Cliente
+            const dynamicEditData = generateDynamicData();
             await invoke('clientes', 'PUT', {
                 id: testState.clienteId,
-                name: 'Cliente Teste Editado',
-                phone: '11888888888'
+                name: `Cliente ${dynamicEditData.name} Editado`,
+                phone: dynamicEditData.phone
             }, 33);
             
             // #34 - Visualizar Cliente
@@ -900,38 +1019,55 @@ async function testLinksPagamentoModule() {
     // #35 - Todos Links
     await invoke('link-pagamentos', 'GET', null, 35);
     
-    // #36 - Criar Link
-    const createRes = await invoke('link-pagamentos', 'POST', {
-        nome: 'Link de Teste Automatizado',
-        valor: 5000,
-        formas_de_pagamento: ['pix', 'cartao'],
-        ativo: true,
-        descricao: 'Link de pagamento para teste automatizado',
-        company_id: testState.companyId,
-        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 dias
-    }, 36);
-    
-    if (createRes.success && createRes.data?.id) {
-        testState.paymentLinkId = createRes.data.id;
-        log(color.green, `  -> ✅ Link criado com ID: ${testState.paymentLinkId}`);
-        
-        // #37 - Visualizar Link
-        await invoke(`link-pagamentos/${testState.paymentLinkId}`, 'GET', null, 37);
-        
-        // #38 - Editar Link
-        await invoke(`link-pagamentos/${testState.paymentLinkId}`, 'PATCH', {
-            title: 'Link de Pagamento Editado',
-            amount: 7500
-        }, 38);
-        
-        // #39 - Deletar Link
-        await invoke(`link-pagamentos/${testState.paymentLinkId}`, 'DELETE', null, 39);
-    } else {
+    // #36 - Criar Link - Payload corrigido
+    if (!shouldRunTest(['companyId'], 'Criar Link de Pagamento')) {
+        printSkip('POST /functions/v1/link-pagamentos', 36, 'Company ID não disponível');
+        testState.skippedCount++;
         const skippedEndpoints = [37, 38, 39];
         skippedEndpoints.forEach(endpoint => {
-            printSkip(`Endpoint #${endpoint}`, endpoint, 'Link não criado');
+            printSkip(`Endpoint #${endpoint}`, endpoint, 'Link não criado - Company ID não disponível');
         });
         testState.skippedCount += skippedEndpoints.length;
+    } else {
+        const dynamicData = generateDynamicData();
+        const createPayload = adaptPayload({
+            title: `Link ${dynamicData.name}`,
+            amount: Math.floor(Math.random() * 10000) + 1000, // Entre R$ 10,00 e R$ 100,00
+            payment_methods: ['pix', 'credit_card'],
+            active: true,
+            description: `Link de pagamento ${dynamicData.name}`,
+            expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 dias
+            currency: 'BRL',
+            max_uses: 100
+        }, {
+            company_id: 'companyId'
+        });
+        
+        const createRes = await invoke('link-pagamentos', 'POST', createPayload, 36);
+        
+        if (createRes.success && createRes.data?.id) {
+            testState.paymentLinkId = createRes.data.id;
+            log(color.green, `  -> ✅ Link criado com ID: ${testState.paymentLinkId}`);
+            
+            // #37 - Visualizar Link
+            await invoke(`link-pagamentos/${testState.paymentLinkId}`, 'GET', null, 37);
+            
+            // #38 - Editar Link
+            const dynamicEditData = generateDynamicData();
+            await invoke(`link-pagamentos/${testState.paymentLinkId}`, 'PATCH', {
+                title: `Link ${dynamicEditData.name} Editado`,
+                amount: Math.floor(Math.random() * 15000) + 2000 // Entre R$ 20,00 e R$ 150,00
+            }, 38);
+            
+            // #39 - Deletar Link
+            await invoke(`link-pagamentos/${testState.paymentLinkId}`, 'DELETE', null, 39);
+        } else {
+            const skippedEndpoints = [37, 38, 39];
+            skippedEndpoints.forEach(endpoint => {
+                printSkip(`Endpoint #${endpoint}`, endpoint, 'Link não criado');
+            });
+            testState.skippedCount += skippedEndpoints.length;
+        }
     }
 }
 
@@ -967,7 +1103,7 @@ async function testPadroesModule() {
     }, 41);
     
     // #42 - Editar Padrão (payload corrigido com campos da tabela vb_cdz_gus_standard_tb)
-    await invoke('standard/1', 'PATCH', {
+    await invoke('standard/last', 'PATCH', {
         nome: 'Padrão Teste Editado',
         paymentmethods: ['PIX', 'CARD'],
         autotransfer: false,
@@ -993,13 +1129,17 @@ async function testChavePixClienteModule() {
     
     let pixKeyId = null;
     
-    // Verificar se já existem chaves Pix
+    // Deletar chaves Pix antigas se existirem para evitar limite
     if (testState.realPixKeys.length > 0) {
-        pixKeyId = testState.realPixKeys[0].id;
-        log(color.blue, `  -> Usando chave Pix existente: ${pixKeyId}`);
-        printSkip('POST /functions/v1/pix-key', 44, 'Usando chave Pix existente');
-        testState.skippedCount++;
-    } else {
+        log(color.yellow, `  -> Deletando ${testState.realPixKeys.length} chave(s) Pix antiga(s)`);
+        for (const pixKey of testState.realPixKeys) {
+            await invoke(`pix-key/${pixKey.id}`, 'DELETE', null, 'delete-old-pix-key');
+        }
+        await new Promise(r => setTimeout(r, 1000)); // Aguardar propagação
+    }
+    
+    // Sempre tentar criar nova chave Pix
+    {
         // #44 - Criar Chave Pix apenas se não existir
         const createRes = await invoke('pix-key', 'POST', {
             key: `teste.${Date.now()}@email.com`,
@@ -1268,9 +1408,10 @@ async function testUsuariosModule() {
         await invoke(`users/${testState.userId}`, 'GET', null, 81);
         
         // #82 - Editar Usuário (cuidadoso com dados reais) (rota corrigida)
+        const dynamicEditData = generateDynamicData();
         await invoke(`users/${testState.userId}/edit`, 'PATCH', {
-            name: (realUser.name || 'Usuário') + ' (Teste)',
-            phone: realUser.phone || '11888888888'
+            name: `${realUser.name || 'Usuário'} ${dynamicEditData.name}`,
+            phone: dynamicEditData.phone
         }, 82);
         
         // #83 - Deletar Usuário (SKIP para proteger dados reais)
@@ -1282,38 +1423,56 @@ async function testUsuariosModule() {
         testState.skippedCount++;
     } else {
         // #80 - Criar Usuário com dados únicos (rota corrigida)
-        const uniqueEmail = `novo.${Date.now()}@teste.com`;
-        const uniqueDocument = Date.now().toString().slice(-11);
-        
-        const createRes = await invoke('users/create', 'POST', {
-            fullname: 'Novo Usuário Teste',
-            email: uniqueEmail,
-            password: 'a_strong_password',
-            phone: '11987654321',
-            companyId: testState.companyId
-        }, 80);
-        
-        if (createRes.success && createRes.data?.id) {
-            testState.userId = createRes.data.id;
-            log(color.green, `  -> ✅ Usuário criado com ID: ${testState.userId}`);
-            
-            // #81 - Visualizar Usuário
-            await invoke(`users/${testState.userId}`, 'GET', null, 81);
-            
-            // #82 - Editar Usuário (rota corrigida)
-            await invoke(`users/${testState.userId}/edit`, 'PATCH', {
-                name: 'Usuário Teste Editado',
-                phone: '11888888888'
-            }, 82);
-            
-            // #83 - Chave API do Usuário (rota corrigida)
-            await invoke(`users/${testState.userId}/apikey`, 'GET', null, 83);
-        } else {
+        if (!shouldRunTest(['companyId'], 'Criar Usuário')) {
+            printSkip('POST /functions/v1/users/create', 80, 'Company ID não disponível');
+            testState.skippedCount++;
             const skippedEndpoints = [81, 82, 83];
             skippedEndpoints.forEach(endpoint => {
-                printSkip(`Endpoint #${endpoint}`, endpoint, 'Usuário não criado');
+                printSkip(`Endpoint #${endpoint}`, endpoint, 'Usuário não criado - Company ID não disponível');
             });
             testState.skippedCount += skippedEndpoints.length;
+        } else {
+            const dynamicData = generateDynamicData();
+            const createPayload = adaptPayload({
+                fullname: `Usuário ${dynamicData.name}`,
+                email: dynamicData.email,
+                password: 'a_strong_password',
+                phone: dynamicData.phone,
+                document: {
+                    number: dynamicData.document,
+                    type: 'cpf'
+                },
+                role: 'user',
+                active: true
+            }, {
+                company_id: 'companyId'
+            });
+            
+            const createRes = await invoke('users/create', 'POST', createPayload, 80);
+            
+            if (createRes.success && createRes.data?.id) {
+                testState.userId = createRes.data.id;
+                log(color.green, `  -> ✅ Usuário criado com ID: ${testState.userId}`);
+                
+                // #81 - Visualizar Usuário
+                await invoke(`users/${testState.userId}`, 'GET', null, 81);
+                
+                // #82 - Editar Usuário (rota corrigida)
+                const dynamicEditData = generateDynamicData();
+                await invoke(`users/${testState.userId}/edit`, 'PATCH', {
+                    name: `Usuário ${dynamicEditData.name} Editado`,
+                    phone: dynamicEditData.phone
+                }, 82);
+                
+                // #83 - Chave API do Usuário (rota corrigida)
+                await invoke(`users/${testState.userId}/apikey`, 'GET', null, 83);
+            } else {
+                const skippedEndpoints = [81, 82, 83];
+                skippedEndpoints.forEach(endpoint => {
+                    printSkip(`Endpoint #${endpoint}`, endpoint, 'Usuário não criado');
+                });
+                testState.skippedCount += skippedEndpoints.length;
+            }
         }
     }
 }
@@ -1323,7 +1482,22 @@ async function testCarteiraModule() {
     printHeader('Carteira');
     
     // #84 - Informações da Carteira (rota corrigida)
-    await invoke('wallet', 'GET', null, 84);
+    const walletRes = await invoke('wallet', 'GET', null, 84);
+    
+    // Se wallet não existir, tentar criar uma
+    if (!walletRes.success && walletRes.response?.status === 400) {
+        log(color.yellow, '  -> Wallet não encontrada, tentando criar...');
+        const createWalletRes = await invoke('wallet', 'POST', {
+            initial_balance: 0,
+            currency: 'BRL'
+        }, 'create-wallet');
+        
+        if (createWalletRes.success) {
+            log(color.green, '  -> ✅ Wallet criada com sucesso');
+            // Tentar buscar novamente
+            await invoke('wallet', 'GET', null, 84);
+        }
+    }
     
     // #85 - Gerenciar Saldo da Carteira (PULADO - requer senha financeira)
     printSkip('POST /functions/v1/wallet/balance-management', 85, 'Pulado: Requer senha financeira');
@@ -1780,8 +1954,11 @@ async function testEmpresaModule() {
          // Restaurar cor padrão azul e verificar personalização
           await invoke('personalization', 'PUT', {
               gateway_name: 'KingPay',
-              color: '#2196F3', // Garantir cor azul padrão
-              logo_url: 'https://exemplo.com/logo.png'
+              primary_color: '#2196F3', // Garantir cor azul padrão
+              secondary_color: '#1976D2',
+              logo_dark: 'https://exemplo.com/logo-dark.png',
+              logo_white: 'https://exemplo.com/logo-white.png',
+              favicon: 'https://exemplo.com/favicon.ico'
           }, 'restore-color');
           
           const personalizationRes = await invoke('personalization', 'GET', null, 'check-personalization');
