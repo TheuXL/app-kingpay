@@ -1,0 +1,142 @@
+
+ ==============================================
+ 📊 RELATÓRIO DE TESTES DA API KINGPAY
+ ==============================================
+ 
+ 🕐 Data/Hora: 13/08/2025, 23:17:40
+ ⏱️ Duração: 0m 35s
+ 
+ 📈 ESTATÍSTICAS GERAIS:
+ • Total de Endpoints: 117
+ • ✅ Sucessos: 73
+ • ❌ Falhas: 14
+ • ⏭️ Pulados: 37
+ • 📊 Taxa de Sucesso: 62.4%
+
+🔍 DETALHES POR ENDPOINT:
+[#1] ✅ SUCESSO POST /auth/v1/token?grant_type=password (739ms)
+[#2] ⏭️ SKIP POST /auth/v1/signup - Evitando criação de usuários desnecessários
+[#3] ✅ SUCESSO POST /functions/v1/validation-codes/generate (604ms)
+[#4] ✅ SUCESSO POST /functions/v1/validation-codes/validate (351ms)
+[#5] ✅ SUCESSO POST /functions/v1/support-tickets (578ms)
+[#99] ✅ SUCESSO GET /functions/v1/companies (530ms)
+[#100] ✅ SUCESSO GET /functions/v1/companies/contagem (600ms)
+[#99a] ✅ SUCESSO GET /functions/v1/acquirers (430ms)
+[#99b] ✅ SUCESSO GET /functions/v1/baas (333ms)
+[#101] ✅ SUCESSO GET /functions/v1/companies/6f8fb543-e3b7-4f31-9599-126287ccf1f4 (525ms)
+[#102] ✅ SUCESSO GET /functions/v1/companies/6f8fb543-e3b7-4f31-9599-126287ccf1f4/taxas (343ms)
+[#103] ✅ SUCESSO GET /functions/v1/companies/6f8fb543-e3b7-4f31-9599-126287ccf1f4/reserva (330ms)
+[#104] ✅ SUCESSO GET /functions/v1/companies/6f8fb543-e3b7-4f31-9599-126287ccf1f4/config (346ms)
+[#105] ✅ SUCESSO GET /functions/v1/companies/6f8fb543-e3b7-4f31-9599-126287ccf1f4/docs (346ms)
+[#106] ✅ SUCESSO GET /functions/v1/companies/6f8fb543-e3b7-4f31-9599-126287ccf1f4/adq (356ms)
+[#107] ⏭️ SKIP GET /functions/v1/companies/:id/financial-info - Endpoint não existe na API
+[#108] ⏭️ SKIP POST /functions/v1/companies - Usando empresa existente
+[#109] ✅ SUCESSO PATCH /functions/v1/companies/6f8fb543-e3b7-4f31-9599-126287ccf1f4/taxas (420ms)
+[#110] ✅ SUCESSO PATCH /functions/v1/companies/6f8fb543-e3b7-4f31-9599-126287ccf1f4/taxas-bulk (403ms)
+[#111] ✅ SUCESSO PATCH /functions/v1/companies/6f8fb543-e3b7-4f31-9599-126287ccf1f4/docs (418ms)
+[#112] ✅ SUCESSO PATCH /functions/v1/companies/6f8fb543-e3b7-4f31-9599-126287ccf1f4/config (270ms)
+[#113] ✅ SUCESSO PATCH /functions/v1/companies/6f8fb543-e3b7-4f31-9599-126287ccf1f4/config-bulk (724ms)
+[#114] ⏭️ SKIP PATCH /functions/v1/companies/:id/financial-info - Endpoint não existe na API
+[#115] ✅ SUCESSO PATCH /functions/v1/companies/6f8fb543-e3b7-4f31-9599-126287ccf1f4/reserva (421ms)
+[#116] ✅ SUCESSO PATCH /functions/v1/companies/6f8fb543-e3b7-4f31-9599-126287ccf1f4/adq (400ms)
+[#117] ✅ SUCESSO PATCH /functions/v1/companies/6f8fb543-e3b7-4f31-9599-126287ccf1f4/reserva-bulk (246ms)
+[#6] ❌ FALHA POST /functions/v1/transactions (270ms)
+[#7] ❌ FALHA GET /functions/v1/credentials (190ms)
+[#8] ⏭️ SKIP POST /functions/v1/webhookfx - Endpoint não existe na API
+[#9] ⏭️ SKIP POST /proxy - Endpoint não existe na API
+[#10] ⏭️ SKIP POST /request_verification - Endpoint não existe na API
+[#11] ✅ SUCESSO GET /functions/v1/subconta (365ms)
+[#12] ❌ FALHA POST /functions/v1/subconta (322ms)
+[#13] ⏭️ SKIP Endpoint #13 - Subconta não criada - possível erro 500 do servidor
+[#14] ⏭️ SKIP Endpoint #14 - Subconta não criada - possível erro 500 do servidor
+[#15] ⏭️ SKIP Endpoint #15 - Subconta não criada - possível erro 500 do servidor
+[#17] ✅ SUCESSO POST /functions/v1/taxas (335ms)
+[#16] ✅ SUCESSO GET /functions/v1/audit-log (354ms)
+[#18] ✅ SUCESSO GET /functions/v1/pix-key (499ms)
+[#19] ⏭️ SKIP PATCH /functions/v1/pix-key/:id/approve - Nenhuma chave Pix encontrada
+[#20] ✅ SUCESSO GET /functions/v1/subconta (346ms)
+[#21] ✅ SUCESSO GET /functions/v1/configuracoes/termos (326ms)
+[#22] ✅ SUCESSO PUT /functions/v1/configuracoes/termos (340ms)
+[#23] ❌ FALHA PUT /functions/v1/configuracoes (334ms)
+[#24] ✅ SUCESSO PUT /functions/v1/personalization (296ms)
+[#25] ✅ SUCESSO GET /functions/v1/personalization (223ms)
+[#26] ✅ SUCESSO GET /functions/v1/config-companie-view (281ms)
+[#27] ✅ SUCESSO GET /functions/v1/pixelTracker (331ms)
+[#28] ✅ SUCESSO POST /functions/v1/pixelTracker (324ms)
+[#29] ⏭️ SKIP PATCH /functions/v1/pixelTracker - Pixel não criado
+[#undefined] ❌ FALHA POST /functions/v1/transactions (242ms)
+[#30] ❌ FALHA POST /functions/v1/risk (347ms)
+[#31] ✅ SUCESSO GET /functions/v1/clientes (375ms)
+[#32] ✅ SUCESSO POST /functions/v1/clientes (330ms)
+[#33] ⏭️ SKIP PUT /functions/v1/clientes - Cliente não criado
+[#34] ⏭️ SKIP GET /functions/v1/clientes/:clienteId - Cliente não criado
+[#35] ✅ SUCESSO GET /functions/v1/link-pagamentos (337ms)
+[#36] ❌ FALHA POST /functions/v1/link-pagamentos (174ms)
+[#37] ⏭️ SKIP Endpoint #37 - Link não criado
+[#38] ⏭️ SKIP Endpoint #38 - Link não criado
+[#39] ⏭️ SKIP Endpoint #39 - Link não criado
+[#40] ✅ SUCESSO GET /functions/v1/standard (307ms)
+[#41] ✅ SUCESSO PATCH /functions/v1/standard/last (353ms)
+[#42] ✅ SUCESSO PATCH /functions/v1/standard/last (488ms)
+[#43] ✅ SUCESSO GET /functions/v1/pix-key (475ms)
+[#44] ❌ FALHA POST /functions/v1/pix-key (407ms)
+[#45] ⏭️ SKIP Endpoint #45 - Chave Pix não disponível
+[#46] ⏭️ SKIP Endpoint #46 - Chave Pix não disponível
+[#47] ⏭️ SKIP Endpoint #47 - Chave Pix não disponível
+[#48] ⏭️ SKIP Endpoint #48 - Chave Pix não disponível
+[#49] ✅ SUCESSO POST /functions/v1/alerts (306ms)
+[#50] ❌ FALHA PUT /functions/v1/configuracoes (328ms)
+[#51] ✅ SUCESSO PUT /functions/v1/configuracoes/acecitar-termos (328ms)
+[#52] ✅ SUCESSO POST /functions/v1/dados-dashboard?start_date=2025-07-15&end_date=2025-08-14&company_id=6f8fb543-e3b7-4f31-9599-126287ccf1f4 (583ms)
+[#53] ✅ SUCESSO POST /functions/v1/dados-dashboard/top-sellers?start_date=2025-07-15&end_date=2025-08-14&company_id=6f8fb543-e3b7-4f31-9599-126287ccf1f4 (400ms)
+[#54] ✅ SUCESSO POST /functions/v1/dados-dashboard/top-produtos?start_date=2025-07-15&end_date=2025-08-14&company_id=6f8fb543-e3b7-4f31-9599-126287ccf1f4 (338ms)
+[#55] ✅ SUCESSO POST /functions/v1/dados-dashboard/grafico?start_date=2025-07-15&end_date=2025-08-14&company_id=6f8fb543-e3b7-4f31-9599-126287ccf1f4 (385ms)
+[#56] ✅ SUCESSO POST /functions/v1/dados-dashboard/infos-adicionais?start_date=2025-07-15&end_date=2025-08-14&company_id=6f8fb543-e3b7-4f31-9599-126287ccf1f4 (241ms)
+[#57] ✅ SUCESSO POST /functions/v1/dados-dashboard/top-sellers?start_date=2025-07-15&end_date=2025-08-14&company_id=6f8fb543-e3b7-4f31-9599-126287ccf1f4 (404ms)
+[#58] ✅ SUCESSO POST /functions/v1/dados-dashboard/providers?start_date=2025-07-15&end_date=2025-08-14&company_id=6f8fb543-e3b7-4f31-9599-126287ccf1f4 (301ms)
+[#59] ✅ SUCESSO POST /functions/v1/dados-dashboard/acquirer?start_date=2025-07-15&end_date=2025-08-14&company_id=6f8fb543-e3b7-4f31-9599-126287ccf1f4 (390ms)
+[#60] ✅ SUCESSO POST /functions/v1/faturamento-whitelabel?start_date=2025-07-15&end_date=2025-08-14&company_id=6f8fb543-e3b7-4f31-9599-126287ccf1f4 (654ms)
+[#61] ✅ SUCESSO POST /functions/v1/whitelabel-financeiro?start_date=2025-07-15&end_date=2025-08-14&company_id=6f8fb543-e3b7-4f31-9599-126287ccf1f4 (469ms)
+[#62] ✅ SUCESSO GET /functions/v1/saques (267ms)
+[#63] ⏭️ SKIP POST /functions/v1/withdrawals - Chave Pix não disponível
+[#64] ⏭️ SKIP PATCH /functions/v1/withdrawals/:id - Chave Pix não disponível
+[#65] ✅ SUCESSO GET /functions/v1/saques/aggregates (455ms)
+[#undefined] ❌ FALHA POST /functions/v1/transactions (294ms)
+[#66] ✅ SUCESSO GET /functions/v1/antecipacoes/anticipations (366ms)
+[#67] ❌ FALHA POST /functions/v1/antecipacoes/create (358ms)
+[#68] ⏭️ SKIP Endpoint #68 - Antecipação não criada
+[#69] ⏭️ SKIP Endpoint #69 - Antecipação não criada
+[#70] ✅ SUCESSO GET /functions/v1/antecipacoes/anticipations?status=pending (373ms)
+[#71] ✅ SUCESSO GET /functions/v1/antecipacoes/anticipations?status=approved (361ms)
+[#72] ✅ SUCESSO GET /functions/v1/antecipacoes/anticipations?status=paid (320ms)
+[#73] ✅ SUCESSO GET /functions/v1/antecipacoes/anticipations?status=cancelled (391ms)
+[#74] ✅ SUCESSO GET /functions/v1/antecipacoes/anticipations?limit=10 (311ms)
+[#75] ✅ SUCESSO GET /functions/v1/antecipacoes/anticipations?offset=0 (306ms)
+[#76] ✅ SUCESSO GET /functions/v1/antecipacoes/anticipations (318ms)
+[#77] ✅ SUCESSO GET /functions/v1/antecipacoes/anticipations (312ms)
+[#78] ✅ SUCESSO GET /functions/v1/antecipacoes/anticipations (286ms)
+[#79] ✅ SUCESSO GET /functions/v1/users (409ms)
+[#80] ❌ FALHA POST /functions/v1/users/create (290ms)
+[#81] ⏭️ SKIP Endpoint #81 - Usuário não criado
+[#82] ⏭️ SKIP Endpoint #82 - Usuário não criado
+[#83] ⏭️ SKIP Endpoint #83 - Usuário não criado
+[#84] ❌ FALHA GET /functions/v1/wallet (362ms)
+[#85] ⏭️ SKIP POST /functions/v1/wallet/balance-management - Pulado: Requer senha financeira
+[#86] ✅ SUCESSO GET /functions/v1/extrato/c0e9ebd2-c8a8-4442-bb40-dc1626ed5126 (307ms)
+[#87] ✅ SUCESSO GET /functions/v1/webhook (309ms)
+[#87] ✅ SUCESSO POST /functions/v1/webhook (504ms)
+[#88] ✅ SUCESSO PUT /functions/v1/webhook/4a69d04a-d10f-4e91-a61d-e3cbdc37c310 (305ms)
+[#89] ❌ FALHA DELETE /functions/v1/webhook/4a69d04a-d10f-4e91-a61d-e3cbdc37c310 (226ms)
+[#90] ✅ SUCESSO GET /functions/v1/billings (446ms)
+[#91] ⏭️ SKIP PATCH /functions/v1/billings/pay - Nenhuma fatura encontrada
+[#92] ✅ SUCESSO GET /functions/v1/baas (331ms)
+[#93] ⏭️ SKIP Endpoint #93 - Nenhum BaaS encontrado
+[#94] ⏭️ SKIP Endpoint #94 - Nenhum BaaS encontrado
+[#95] ⏭️ SKIP Endpoint #95 - Nenhum BaaS encontrado
+[#96] ⏭️ SKIP Endpoint #96 - Nenhum BaaS encontrado
+[#97] ✅ SUCESSO GET /functions/v1/acquirers (412ms)
+[#98] ⏭️ SKIP Endpoint #98 - Nenhum adquirente encontrado
+[#99] ⏭️ SKIP Endpoint #99 - Nenhum adquirente encontrado
+[#100] ⏭️ SKIP Endpoint #100 - Nenhum adquirente encontrado
+
+==============================================
