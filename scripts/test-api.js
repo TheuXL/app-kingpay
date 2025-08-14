@@ -654,12 +654,12 @@ async function testSubcontasModule() {
     printSkip('POST /request_verification', 10, 'Endpoint não existe na API');
     testState.skippedCount++;
     
-    // #11 - Todas Subcontas
-    await invoke('subaccounts', 'GET', null, 11, {}, 'subaccounts');
+    // #11 - Todas Subcontas (rota corrigida para /subconta)
+    await invoke('subconta', 'GET', null, 11, {}, 'subaccounts');
     
-    // #12 - Criar Subconta (POSSÍVEL ERRO 500 DO SERVIDOR)
+    // #12 - Criar Subconta (rota corrigida para /subconta)
     log(color.yellow, '  -> ⚠️ Aviso: Endpoint pode falhar com erro 500 devido a problemas no servidor');
-    const createRes = await invoke('subaccounts', 'POST', {
+    const createRes = await invoke('subconta', 'POST', {
         name: `Subconta Teste ${Date.now()}`,
         email: `subconta.${Date.now()}@teste.com`,
         document: `${Date.now()}`.slice(-11),
@@ -671,19 +671,19 @@ async function testSubcontasModule() {
         testState.subaccountId = createRes.data.id;
         log(color.green, `  -> ✅ Subconta criada com ID: ${testState.subaccountId}`);
         
-        // #13 - Visualizar Subconta
-        await invoke(`subaccounts/${testState.subaccountId}`, 'GET', null, 13);
+        // #13 - Visualizar Subconta (rota corrigida para /subconta)
+        await invoke(`subconta/${testState.subaccountId}`, 'GET', null, 13);
         
-        // #14 - Editar Subconta (POSSÍVEL ERRO 500 DO SERVIDOR)
+        // #14 - Editar Subconta (rota corrigida para /subconta)
         log(color.yellow, '  -> ⚠️ Aviso: Endpoint pode falhar com erro 500 devido a problemas no servidor');
-        await invoke(`subaccounts/${testState.subaccountId}`, 'PUT', {
+        await invoke(`subconta/${testState.subaccountId}`, 'PUT', {
             name: `Subconta Teste Editada ${Date.now()}`,
             phone: '11888888888'
         }, 14);
         
-        // #15 - Deletar Subconta (POSSÍVEL ERRO 500 DO SERVIDOR)
+        // #15 - Deletar Subconta (rota corrigida para /subconta)
         log(color.yellow, '  -> ⚠️ Aviso: Endpoint pode falhar com erro 500 devido a problemas no servidor');
-        await invoke(`subaccounts/${testState.subaccountId}`, 'DELETE', null, 15);
+        await invoke(`subconta/${testState.subaccountId}`, 'DELETE', null, 15);
     } else {
         log(color.red, '  -> ❌ Falha ao criar subconta. Possível problema no servidor (erro 500).');
         const skippedEndpoints = [13, 14, 15];
@@ -706,10 +706,10 @@ async function testLogsModule() {
 async function testTaxasModule() {
     printHeader('Taxas');
     
-    // #17 - Calcular Taxas com company_id
+    // #17 - Calcular Taxas com company_id (payment_method corrigido para maiúsculas)
     await invoke('taxas', 'POST', {
         valor: 10000,
-        payment_method: 'pix',
+        payment_method: 'PIX',
         parcelas: 1,
         company_id: testState.companyId
     }, 17);
@@ -942,21 +942,45 @@ async function testPadroesModule() {
     // #40 - Todos Padrões
     await invoke('standard', 'GET', null, 40);
     
-    // #41 - Atualizar Último Padrão
+    // #41 - Atualizar Último Padrão (payload corrigido com campos da tabela vb_cdz_gus_standard_tb)
     await invoke('standard/last', 'PATCH', {
-        name: 'Padrão Teste Automatizado',
-        description: 'Padrão para testes automatizados',
-        active: true,
-        auto_approve: true,
-        max_amount: 10000
+        nome: 'Padrão Teste Automatizado',
+        paymentmethods: ['PIX', 'CARD', 'BOLETO'],
+        autotransfer: true,
+        transferenabled: true,
+        maxtransferamount: 10000,
+        mintransferamount: 10,
+        pix_fee_percentage: 2.5,
+        pix_fee_fixed: 0.50,
+        card_fee_percentage: 3.5,
+        card_fee_fixed: 0.30,
+        boleto_fee_percentage: 2.0,
+        boleto_fee_fixed: 3.50,
+        anticipationenabled: true,
+        autoapproveanticipation: false,
+        daystoanticipate: 30,
+        reservepercentagepix: 5,
+        reservedayspix: 30,
+        reservepercentageboleto: 10,
+        reservedaysboleto: 45,
+        status: true
     }, 41);
     
-    // #42 - Editar Padrão (usando endpoint genérico)
+    // #42 - Editar Padrão (payload corrigido com campos da tabela vb_cdz_gus_standard_tb)
     await invoke('standard/1', 'PATCH', {
-        name: 'Padrão Teste Editado',
-        description: 'Padrão editado via teste automatizado',
-        auto_approve: false,
-        max_amount: 15000
+        nome: 'Padrão Teste Editado',
+        paymentmethods: ['PIX', 'CARD'],
+        autotransfer: false,
+        transferenabled: false,
+        maxtransferamount: 15000,
+        mintransferamount: 20,
+        pix_fee_percentage: 2.0,
+        pix_fee_fixed: 0.40,
+        card_fee_percentage: 3.0,
+        card_fee_fixed: 0.25,
+        anticipationenabled: false,
+        autoapproveanticipation: false,
+        status: true
     }, 42);
 }
 
@@ -1265,7 +1289,8 @@ async function testUsuariosModule() {
             fullname: 'Novo Usuário Teste',
             email: uniqueEmail,
             password: 'a_strong_password',
-            phone: '11987654321'
+            phone: '11987654321',
+            companyId: testState.companyId
         }, 80);
         
         if (createRes.success && createRes.data?.id) {
@@ -1486,11 +1511,31 @@ async function testEmpresaModule() {
     // #100 - Contagem
     await invoke('companies/contagem', 'GET', null, 100);
     
-    // Se já temos empresas reais, usar uma delas
-    if (testState.realCompanies.length > 0) {
-        const realCompany = testState.realCompanies[0];
-        testState.companyId = realCompany.id;
-        log(color.blue, `  -> Usando empresa existente: ${testState.companyId}`);
+    // CORREÇÃO CRÍTICA: Buscar empresa APROVADA para testes interativos
+    if (companiesRes.success && companiesRes.data.companies && companiesRes.data.companies.length > 0) {
+        const approvedCompany = companiesRes.data.companies.find(c => c.status === 'approved');
+        if (approvedCompany) {
+            testState.companyId = approvedCompany.id;
+            log(color.blue, `  -> Usando empresa APROVADA existente: ${testState.companyId}`);
+        } else {
+            log(color.yellow, '  -> Nenhuma empresa aprovada encontrada. Testes de transação podem falhar.');
+            // Usar qualquer empresa para testes de leitura
+            testState.companyId = companiesRes.data.companies[0].id;
+            log(color.blue, `  -> Usando empresa não aprovada para testes básicos: ${testState.companyId}`);
+        }
+        
+        // Buscar e armazenar IDs de adquirentes e BaaS
+        const acquirersRes = await invoke('acquirers', 'GET', null, '99a', {}, 'acquirers');
+        if (acquirersRes.success && acquirersRes.data.length > 0) {
+            testState.acquirerId = acquirersRes.data[0].id;
+            log(color.blue, `  -> Adquirente armazenado: ${testState.acquirerId}`);
+        }
+        
+        const baasRes = await invoke('baas', 'GET', null, '99b', {}, 'baas');
+        if (baasRes.success && baasRes.data.length > 0) {
+            testState.baasId = baasRes.data[0].id;
+            log(color.blue, `  -> BaaS armazenado: ${testState.baasId}`);
+        }
         
         // #101 - Buscar Empresa
         await invoke(`companies/${testState.companyId}`, 'GET', null, 101);
@@ -1518,20 +1563,24 @@ async function testEmpresaModule() {
         printSkip('POST /functions/v1/companies', 108, 'Usando empresa existente');
         testState.skippedCount++;
         
-        // #109 - Atualizar Taxas (payload corrigido)
+        // #109 - Atualizar Taxas (payload corrigido com campos da tabela vb_cdz_gus_companies_tb)
         await invoke(`companies/${testState.companyId}/taxas`, 'PATCH', {
-            pix_taxa_percentual: 2.5,
-            pix_taxa_fixa: 0.50,
-            card_taxa_percentual: 3.5,
-            card_taxa_fixa: 0.30
+            pix_fee_percentage: 2.5,
+            pix_fee_fixed: 0.50,
+            card_fee_percentage: 3.5,
+            card_fee_fixed: 0.30,
+            boleto_fee_percentage: 2.0,
+            boleto_fee_fixed: 3.50
         }, 109);
         
         // #110 - Atualizar Taxas em Massa (payload corrigido)
         await invoke(`companies/${testState.companyId}/taxas-bulk`, 'PATCH', {
-            pix_taxa_percentual: 2.0,
-            pix_taxa_fixa: 0.40,
-            card_taxa_percentual: 3.0,
-            card_taxa_fixa: 0.25
+            pix_fee_percentage: 2.0,
+            pix_fee_fixed: 0.40,
+            card_fee_percentage: 3.0,
+            card_fee_fixed: 0.25,
+            boleto_fee_percentage: 1.8,
+            boleto_fee_fixed: 3.00
         }, 110);
         
         // #111 - Atualizar Documentos (payload corrigido)
@@ -1561,22 +1610,29 @@ async function testEmpresaModule() {
         printSkip('PATCH /functions/v1/companies/:id/financial-info', 114, 'Endpoint não existe na API');
         testState.skippedCount++;
         
-        // #115 - Atualizar Reserva
+        // #115 - Atualizar Reserva (payload corrigido com campos da tabela vb_cdz_gus_companies_tb)
         await invoke(`companies/${testState.companyId}/reserva`, 'PATCH', {
-            percentage: 5.0,
-            days: 30
+            reservepercentagepix: 5,
+            reservedayspix: 30,
+            reservepercentageboleto: 10,
+            reservedaysboleto: 45,
+            reservedaysanticipation: 15
         }, 115);
         
-        // #116 - Atualizar Adquirente
+        // #116 - Atualizar Adquirente (payload corrigido com campos da tabela vb_cdz_gus_companies_tb)
         await invoke(`companies/${testState.companyId}/adq`, 'PATCH', {
-            acquirer_id: 1,
-            active: true
+            acquirers_pix: testState.acquirerId || null,
+            acquirers_boleto: testState.acquirerId || null,
+            acquirers_card: testState.acquirerId || null,
+            baas: testState.baasId || null
         }, 116);
         
-        // #117 - Editar Reserva Em massa
+        // #117 - Editar Reserva Em massa (payload corrigido)
         await invoke(`companies/${testState.companyId}/reserva-bulk`, 'PATCH', {
-            percentage: 3.0,
-            days: 15
+            reservepercentagepix: 3,
+            reservedayspix: 15,
+            reservepercentageboleto: 8,
+            reservedaysboleto: 30
         }, 117);
      } else {
          // #108 - Criar Empresa com payload robusto (PRIORIDADE MÁXIMA)
